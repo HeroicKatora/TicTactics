@@ -7,9 +7,11 @@
 #pragma once
 
 #include <atomic>
-#include "GameState.hpp"
+#include "Move.hpp"
 
-template<unsigned size>
+constexpr unsigned SEARCHER_SIZE = 500000;
+class GameState;
+
 class Searcher;
 
 struct MoveSuggestion{
@@ -22,7 +24,6 @@ struct SearchNode{
 	float rating;
 };
 
-template<unsigned size>
 class Searcher{
 	GameState const * gameState;
 	MoveHistory movesGenerated;

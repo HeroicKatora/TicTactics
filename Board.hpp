@@ -13,6 +13,7 @@
  */
 struct BoardField{
 
+	BoardField();
 	BoardField(FieldBits bits);
 	FieldBits bitsUsed;
 

@@ -5,21 +5,27 @@
  *      Author: Andreas Molzer
  */
 #include "Input.hpp"
+#include <string>
+#include <iostream>
 
-MoveDescriptor getMoveDescriptionFromInput(char * input){
+MoveDescriptor getMoveDescriptionFromInput(const char * input){
 	BoardBits board;
 	FieldBits field;
-	if(sscanf(input, "%1x%1x%c", &board, &field)!=2){
+	printf(input);
+	printf("->Input\n");
+	if(sscanf(input, "%1hhu%1hu%c", &board, &field)!=2){
 		board = 10;
 		field = 10;
 	}
+	board--;
+	field--;
 	field = 0x1 << field;
+	printf("Interpreted as %u, %u\n",board+1, field);
 	return MoveDescriptor{board, field};
 }
 
-MoveDescriptor getDescriptionOnStream(FILE * stream){
-	char input [3];
-	fscanf(stream, "%2c", input);
-	input[2] = 0;
-	return getMoveDescriptionFromInput(input);
+MoveDescriptor getDescriptionOnStream(){
+	std::string input;
+	std::getline(std::cin, input);
+	return getMoveDescriptionFromInput(input.data());
 }

@@ -54,3 +54,6 @@ BoardField BoardField::operator |(const BoardField& other) {
 bool BoardField::operator ==(const BoardField& other) {
 	return bitsUsed == other.bitsUsed;
 }
+
+BoardField::BoardField() :bitsUsed(0){
+}

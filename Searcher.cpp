@@ -7,34 +7,28 @@
 
 #include "Searcher.hpp"
 
-template<unsigned size>
-Searcher<size>::Searcher(GameState * state):gameState(state), pause(true), movesGenerated(){
+Searcher::Searcher(GameState * state):gameState(state), pause(true), movesGenerated(){
 
 }
 
-template<unsigned size>
-MoveSuggestion Searcher<size>::getBestKnownMove(){
+MoveSuggestion Searcher::getBestKnownMove(){
 
 }
 
 
-template<unsigned size>
-void Searcher<size>::runParallel() {
+void Searcher::runParallel() {
 
 }
 
-template<unsigned size>
-void Searcher<size>::notifyUndo(Move& move) {
+void Searcher::notifyUndo(Move& move) {
 
 }
 
-template<unsigned size>
-void Searcher<size>::notifyMoveMade(Move& move) {
+void Searcher::notifyMoveMade(Move& move) {
 
 }
 
-template<unsigned size>
-void Searcher<size>::setPause(bool pause) {
+void Searcher::setPause(bool pause) {
 	this->pause = pause;
 }
 

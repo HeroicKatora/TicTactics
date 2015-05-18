@@ -7,7 +7,7 @@
 #pragma once
 
 #include <stack>
-#include "types.hpp"
+#include "Board.hpp"
 
 struct Move;
 struct MoveDescriptor;

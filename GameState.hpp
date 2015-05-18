@@ -9,8 +9,6 @@
 #include "Move.hpp"
 #include "Searcher.hpp"
 
-constexpr unsigned SEARCHER_SIZE = 500000;
-
 enum InitResultType{
 	PASSED, DUPLICATE, MIDMOVE, TOOMANY
 };
@@ -28,7 +26,7 @@ struct InitResult{
 class GameState{
 	TacTicBoard board;
 	MoveHistory history;
-	Searcher<::SEARCHER_SIZE> searcher;
+	Searcher searcher;
 	bool playerOneTurn;
 
 	/**
@@ -40,6 +38,8 @@ class GameState{
 	 */
 	void undoMove(Move& m);
 public:
+
+	GameState():board(), history(), searcher(this), playerOneTurn(true){}
 
 	/**
 	 * Checks if a move is valid and then plays it.

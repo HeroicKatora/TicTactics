@@ -11,10 +11,10 @@
 typedef std::uint_fast16_t FieldBits;
 typedef std::uint_fast8_t BoardBits;
 
-inline BoardBits getFieldOfBoard(std::uint_fast8_t boardID){
+inline BoardBits getFieldOfBoard(BoardBits boardID){
 	return 0x1 << boardID;
 }
 
-inline std::uint_fast8_t getBoardOfField(BoardBits bits){
-	return 15-__builtin_clz(bits);
+inline std::uint_fast8_t getBoardOfField(FieldBits bits){
+	return 8*sizeof(int)-__builtin_clz(bits)-1;
 }

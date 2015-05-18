@@ -10,4 +10,4 @@
 
 MoveDescriptor getMoveDescriptionFromInput(char * input);
 
-MoveDescriptor getDescriptionOnStream(FILE * stream);
+MoveDescriptor getDescriptionOnStream();

@@ -16,7 +16,7 @@ void GameState::applyAndChangeMove(Move& m) {
 	ticTacBoard->applyMove(playerOneTurn, m.fieldSet);
 	if(!TicTacBoard::isWon(m.prevWonState)){
 		//Potential new win
-		std::uint_fast16_t wonBoard = 0x1 << m.boardSet;
+		BoardBits wonBoard = 0x1 << m.boardSet;
 		if(ticTacBoard->hasPlayerOneWon()) board.applyMove(true, wonBoard);
 		if(ticTacBoard->hasPlayerTwoWon()) board.applyMove(false, wonBoard);
 	}
@@ -40,7 +40,7 @@ bool GameState::playMove(Move m) {
 		history.push(m);
 		return true;
 	}else{
-		printf("Invalid move Board%u Field%u\n", m.boardSet, m.fieldSet);
+		printf("Invalid move Board %u Fieldbits %u\n", m.boardSet, m.fieldSet);
 		return false;
 	}
 }
