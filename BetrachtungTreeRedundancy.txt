@@ -1,0 +1,19 @@
+Redundancy of a partial tree system:
+{redunancy per node} * {saved nodes}
+
+	Redundancy of a "path to best solutions" tree (size n_0, full, branchfactor b):
+		Redundancy of level n (with m paths):
+		Assert:
+			- Save is injective (m < b^{n_0}
+		{redundancy of every node of level n:=RedNode(n)} * m
+		{{usage count of node} - {probability of usage}	} * m
+		{{m} / {b^n}		   - {1-?}					} * m
+		Uniform distributed		 {1-"All uses go to other nodes"}
+		"All uses go to other node:"
+			{{b^{n_0-1}*(b-1)} C {m}}/{b^{n_0}} C {m}
+			"Paths without node" C m/"All paths" C m
+			= {{b^{n_0-1}*(b-1)} P {m}}/{b^{n_0}} P {m}
+			= {{{b^{n_0-1}*(b-1)-1} P {m-1}}/{b^{n_0}-1} P {m-1}}*{{b-1} / {b}}
+			http://www.wolframalpha.com/input/?i=C%28b^%28m-1%29*%28b-1%29%2C+n%29%2FC%28b^m%2Cn%29
+	Redundancy of all levels:
+	m * {sum from i=0 to n_0 RedNode_n_0(i)}
