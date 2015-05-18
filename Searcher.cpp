@@ -7,7 +7,7 @@
 
 #include "Searcher.hpp"
 
-Searcher::Searcher(GameState * state):gameState(state), pause(true), movesGenerated(){
+Searcher::Searcher(GameState * state):gameState(state), movesGenerated(), pause(true){
 
 }
 

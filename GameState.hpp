@@ -10,12 +10,18 @@
 #include "Searcher.hpp"
 
 enum InitResultType{
-	PASSED, DUPLICATE, MIDMOVE, TOOMANY
+	PASSED = 0,			//All good
+	DUPLICATE = 1,		//Move was duplicate
+	INVALID = 2,		//A move was invalid (input could already catch)
+	MIDDLE_MOVE = 3,	//Move was in the most center, 5|5
+	FIELDOVERFLOW = 4,	//More than one move on the same field
+	BOARDOVERFLOW = 5,	//More than two moves on the same board
+	NOT_DURING_INIT = 6	//Game already going
 };
 
 struct InitResultInfo{
-	bool player;
-	BoardBits board;
+	bool playerOne;
+	BoardBits index;
 };
 
 struct InitResult{
@@ -33,10 +39,16 @@ class GameState{
 	 * Applies a move to the board and sets its fields according to the current board state.
 	 */
 	void applyAndChangeMove(Move& m);
+	void _applyMove(Move m); //Convenience, should use this only in init
 	/**
 	 * Undo the given move (asserts it is correct)
 	 */
 	void undoMove(Move& m);
+
+	/**
+	 * Checks if the initial moves of a player are valid
+	 */
+	InitResult checkSingleValidity(MoveDescriptor playerMoves[9]);
 public:
 
 	GameState():board(), history(), searcher(this), playerOneTurn(true){}
@@ -63,7 +75,7 @@ public:
 	 */
 	bool isValidMove(Move& m);
 
-	InitResult initializeWithMoves(Move playerOne[9], Move playerTwo[9]);
+	InitResult initializeWithMoves(MoveDescriptor playerOne[9], MoveDescriptor playerTwo[9]);
 
 	bool isWon();
 

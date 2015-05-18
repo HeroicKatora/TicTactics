@@ -13,6 +13,7 @@ MoveDescriptor getMoveDescriptionFromInput(const char * input){
 	FieldBits field;
 	printf(input);
 	printf("->Input\n");
+	while(sscanf(input, " ")); //Skip previous spaces
 	if(sscanf(input, "%1hhu%1hu%c", &board, &field)!=2){
 		board = 10;
 		field = 10;
@@ -27,5 +28,11 @@ MoveDescriptor getMoveDescriptionFromInput(const char * input){
 MoveDescriptor getDescriptionOnStream(){
 	std::string input;
 	std::getline(std::cin, input);
+	return getMoveDescriptionFromInput(input.data());
+}
+
+MoveDescriptor getInitDescriptorOnStream(){
+	std::string input;
+	std::getline(std::cin, input, ',');
 	return getMoveDescriptionFromInput(input.data());
 }

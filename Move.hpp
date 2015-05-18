@@ -19,6 +19,15 @@ class MoveHistory;
 struct MoveDescriptor{
 	BoardBits whichBoard;
 	FieldBits whichField;
+	bool operator==(MoveDescriptor& comp){
+		return whichBoard == comp.whichBoard && whichField == comp.whichField;
+	}
+	unsigned getBoardIndex(){
+		return whichBoard;
+	}
+	unsigned getFieldIndex(){
+		return getBoardOfField(whichField);
+	}
 };
 
 //64 bit long representing a move made. Does not guarantee for the correctness of the moves
@@ -29,7 +38,7 @@ struct Move{
 		fieldSet(field), boardWinOne(0), boardWinTwo(0){}
 	Move(MoveDescriptor description):
 		Move(description.whichBoard, description.whichField){};
-	WonState prevWonState;	//Set if the targeted board was unwinable before this move
+	WonState prevWonState;	//Previous win state of the board
 	BoardBits boardSet; 	//0..8, index of board
 	FieldBits fieldSet;	//0000 000$ $$$$ $$$$ bit set according to the target field
 	FieldBits boardWinOne;	//0000 000$ $$$$ $$$$ bit set if a board was conquered by P1

@@ -11,3 +11,5 @@
 MoveDescriptor getMoveDescriptionFromInput(char * input);
 
 MoveDescriptor getDescriptionOnStream();
+
+MoveDescriptor getInitDescriptorOnStream();

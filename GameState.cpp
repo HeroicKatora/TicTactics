@@ -23,6 +23,10 @@ void GameState::applyAndChangeMove(Move& m) {
 	playerOneTurn = !playerOneTurn;
 }
 
+void GameState::_applyMove(Move m){
+	applyAndChangeMove(m);
+}
+
 void GameState::undoMove(Move& m){
 	playerOneTurn = !playerOneTurn;
 	TicTacBoard *ticTacBoard = board.components+m.boardSet;
@@ -58,8 +62,8 @@ MoveSuggestion GameState::getBestKnownMove() {
 
 bool GameState::isValidMove(Move& m) {
 	//Trivial invalid
-	if(m.boardSet >= 9) return false; //Invalid board index
-	if(m.fieldSet >= 0x100) return false; //Invalid field index
+	if(m.boardSet > 8) return false; //Invalid board index
+	if(m.fieldSet > 0x100) return false; //Invalid field index
 	if(__builtin_popcount(m.fieldSet) != 1)return false; //Invalid field descriptor (more than one bit set)
 
 	//More complex invalid
@@ -87,4 +91,83 @@ bool GameState::isWon(){
 
 bool GameState::isPlayerOneTurn(){
 	return playerOneTurn;
+}
+
+unsigned isIn(MoveDescriptor m, MoveDescriptor playerMoves [9]){
+	unsigned count = 0;
+	for(int i = 0;i<9;i++){
+		if(m == playerMoves[i]) count++;
+	}
+	return count;
+}
+
+InitResult GameState::checkSingleValidity(MoveDescriptor playerMoves[9]){
+	InitResult result{};
+	result.type = PASSED;
+
+	//Check validity of each move, check duplicates, too many in the same board, all on
+	//different field
+	char playerBoards[9] = {};
+	char playerFields[9] = {};
+	for(int i = 0;i<9;i++){
+		MoveDescriptor m = playerMoves[i];
+		Move move = Move(m);
+		if(!isValidMove(move)){
+			if(m.whichBoard == 4 && m.whichField == 0x10){
+				result.type = MIDDLE_MOVE;
+			}else{
+				result.type = INVALID;
+			}
+			result.info.index = i;
+		}
+		if(isIn(playerMoves[i], playerMoves) != 1){
+			result.type = DUPLICATE;
+			return result;
+		}
+		unsigned board = m.getBoardIndex();
+		unsigned field = m.getFieldIndex();
+		if(playerBoards[board] >= 2){
+			result.type = BOARDOVERFLOW;
+			result.info.index = i;
+			return result;
+		}
+		playerBoards[board]++;
+		if(playerFields[field] >= 1){
+			result.type = FIELDOVERFLOW;
+			result.info.index = i;
+			return result;
+		}
+		playerFields[field]++;
+	}
+	return result;
+}
+
+InitResult GameState::initializeWithMoves(MoveDescriptor playerOne[9], MoveDescriptor playerTwo[9]){
+	InitResult result{};
+
+	//Check if in init phase
+	if(history.size() > 0){
+		result.type = NOT_DURING_INIT;
+		return result;
+	}
+
+	result = checkSingleValidity(playerOne);
+	if(result.type != PASSED){
+		result.info.playerOne = true;
+		return result;
+	}
+
+	result = checkSingleValidity(playerTwo);
+	if(result.type != PASSED){
+		result.info.playerOne = false;
+		return result;
+	}
+
+	//All valid, lets carry it out
+	for(int i = 0;i<9;i++){
+		if(!isIn(playerOne[i], playerTwo)) _applyMove(Move(playerOne[i]));
+		if(!isIn(playerTwo[i], playerOne)) _applyMove(Move(playerTwo[i]));
+	}
+	result.type = InitResultType::PASSED;
+	return result;
 }
