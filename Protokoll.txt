@@ -75,6 +75,7 @@ This Protocol starts with [Game]
 	if([error:p1M, p2M]) 
 		"<Init error>\n" >> sterr
 		[Loose game:[traitor"]]
+	"Start turns\n" << stdin
 
 [Get Opening: <Move>[] moves]: << <bool>
 	in << stdin

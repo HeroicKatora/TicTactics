@@ -37,28 +37,36 @@ void engineSettingsPhase();
 void gameSettingsPhase();
 void gameLoop();
 
-constexpr int lineLength = 1000;
-char line [lineLength];
+char line [TTTPConst::lineLength];
 
 void goToNextLine(){
-	nextProtocolLine(line, lineLength);
+	nextProtocolLine(line, TTTPConst::lineLength);
+}
+
+/**
+ * Waits for a line matching the regex
+ */
+void waitForLine(std::regex& regex){
+	do{
+		goToNextLine();
+	}while(!matches(line, regex));
 }
 
 int main(int argc, char **argv) {
-	printf("Welcome to TicTactis Engine\n");
-	fprintf(stdout, "Triple T Madness");
+	printOut("Welcome to TicTactis Engine\n");
+	printOut("Triple T Madness");
 	engineSettingsPhase();
 	gameSettingsPhase();
 
-	printf("Start game\n");
+	printOut("Start game\n");
 	initGame();
 	gameLoop();
 }
 
 void gameLoop(){
 	while(!state.isWon()){
-		state.print();
-		MoveDescriptor desc = getDescription();
+		goToNextLine();
+		MoveDescriptor desc = getMoveDescriptor(line);
 		//FIXME according to protocol
 		state.playMove(Move(desc));
 	}
@@ -67,19 +75,19 @@ void gameLoop(){
 
 void nextInitMove(MoveDescriptor *array, int& existing, bool playerOne){
 	goToNextLine();
-	if(matches(line, reg_move)){
+	if(matches(line, reg::move)){
 		MoveDescriptor desc = getMoveDescriptor(line);
 		Move m(desc);
 		if(!state.isValidMove(m)){
-			fprintf(stderr, "Invalid move\n");
+			printErr("Invalid move\n");
 			looseGame(playerOne);
 		}
-		array[existing] =
+		array[existing] = desc;
 		existing++;
-	}else if(matches(line, reg_engineOp)){
+	}else if(matches(line, reg::engineOp)){
 
 	}else{
-		fprintf(stderr, "Wrong input\n");
+		printErr("Wrong input\n");
 		winGame(!playerOne);
 	}
 }
@@ -89,15 +97,11 @@ void initGame(){
 	MoveDescriptor playerTwo[9];
 
 	int done = 0;
-	do {
-		goToNextLine();
-	}while(!matches(line, reg_initP1));
+	waitForLine(reg::initP1);
 	while(done < 9) nextInitMove(playerOne, done, true);
 
 	done = 0;
-	do {
-		goToNextLine();
-	}while(!matches(line, reg_initP2));
+	waitForLine(reg::initP2);
 	while(done < 9) nextInitMove(playerTwo, done, false);
 
 	InitResult result;
@@ -105,11 +109,11 @@ void initGame(){
 	result.info.index = -1;
 	result = state.initializeWithMoves(playerOne, playerTwo);
 	if(result.type != PASSED){
-		fprintf(stderr, "%u %u %u\n", result.type, result.info.index, result.info.playerOne);
+		printErr("%u %u %u\n", result.type, result.info.index, result.info.playerOne);
 		if(result.type == NOT_DURING_INIT){
-			dbgPrint("The game is already ongoing, what were you thinking");
+			infoPrint("The game is already ongoing, what were you thinking");
 		}else{
-			dbgPrint("Some player failed to give correct input");
+			infoPrint("Some player failed to give correct input");
 			const char * player = result.info.playerOne? "Player One":"Player Two";
 			std::string fault, move, additional;
 			additional = "";
@@ -142,19 +146,20 @@ void initGame(){
 			default:
 				break;
 			}
-			dbgPrint("%s has a%s with move %s%s.", player, fault.data(), move.data(), additional.data());
+			infoPrint("%s has a%s with move %s%s.", player, fault.data(), move.data(), additional.data());
 		}
 		looseGame(result.info.playerOne);
 	}
+	waitForLine(reg::startTurns);
 }
 
 void looseGame(bool playerOne){
-	printf("Player %s lost himself the game\n", playerOne?p1:p2);
+	printf("Player %s lost himself the game\n", playerOne? TTTPConst::p1 : TTTPConst::p2);
 	winGame(!playerOne);
 }
 
 void winGame(bool winnerOne){
-	printf("Player %s has won\n", winnerOne?p1:p2);
+	printf("Player %s has won\n", winnerOne? TTTPConst::p1 : TTTPConst::p2);
 	endGame();
 }
 
@@ -168,11 +173,11 @@ void endGame(){
  * Sets up the engine with the current line
  */
 void setupEngine(){
-
+	//TODO
 }
 
 void engineSettingsPhase(){
-	for(goToNextLine(); !matches(line, reg_endSettings); goToNextLine()){
+	for(goToNextLine(); !matches(line, reg::endSettings); goToNextLine()){
 		setupEngine();
 	}
 }
@@ -181,11 +186,11 @@ void engineSettingsPhase(){
  * Sets up the game with the current line
  */
 void setupGame(){
-
+	//TODO
 }
 
 void gameSettingsPhase(){
-	for(goToNextLine(); !matches(line, reg_endSettings); goToNextLine()){
+	for(goToNextLine(); !matches(line, reg::endSettings); goToNextLine()){
 		setupGame();
 	}
 }

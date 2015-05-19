@@ -6,17 +6,22 @@
  */
 #pragma once
 
+#include "TTTP.hpp"
 #include "Move.hpp"
 #include <regex>
 
-std::regex reg_commentStart (":.*");
-std::regex reg_commentEnd (".*:");
-std::regex reg_startGame("Start Game");
-std::regex reg_endSettings("End settings");
-std::regex reg_initP1("Player 1 init");
-std::regex reg_initP2("Player 2 init");
-std::regex reg_move("B[1..9]F[1..9]");
-std::regex reg_engineOp("");
+struct reg{
+	static std::regex commentStart;
+	static std::regex commentEnd;
+	static std::regex asynchronous;
+	static std::regex startGame;
+	static std::regex startTurns;
+	static std::regex endSettings;
+	static std::regex initP1;
+	static std::regex initP2;
+	static std::regex move;
+	static std::regex engineOp;
+};
 
 int readLine(char * dest, int most);
 

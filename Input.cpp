@@ -9,6 +9,17 @@
 #include <cstdio>
 #include <string.h>
 
+std::regex reg::commentStart{":.*"};
+std::regex reg::commentEnd {".*:"};
+std::regex reg::asynchronous {"\\[.*\\].*"};
+std::regex reg::startGame {"Start game"};
+std::regex reg::startTurns {"Start turns"};
+std::regex reg::endSettings {"End settings"};
+std::regex reg::initP1 {"Player 1 init"};
+std::regex reg::initP2 {"Player 2 init"};
+std::regex reg::move {"B[1..9]F[1..9]"};
+std::regex reg::engineOp {""};
+
 /**
  * Reads the next line, but at most most characters into the string.
  * Returns the number of characters read.
@@ -25,12 +36,16 @@ int nextProtocolLine(char *dest, int maxLineLength){
 	while(anotherLine){
 		len = readLine(dest, maxLineLength);
 		if(!inComment){
-			inComment = matches(dest, reg_commentStart);
+			inComment = matches(dest, reg::commentStart);
 		}
 		if(inComment){
-			inComment = !matches(dest, reg_commentEnd);
+			inComment = !matches(dest, reg::commentEnd);
 		}else{
-			anotherLine = false;
+			if(matches(dest, reg::asynchronous)){
+				anotherLine = true;
+			}else{
+				anotherLine = false;
+			}
 		}
 	}
 	return len;
