@@ -38,11 +38,31 @@ struct Move{
 		fieldSet(field), boardWinOne(0), boardWinTwo(0){}
 	Move(MoveDescriptor description):
 		Move(description.whichBoard, description.whichField){};
-	WonState prevWonState;	//Previous win state of the board
-	BoardBits boardSet; 	//0..8, index of board
-	FieldBits fieldSet;	//0000 000$ $$$$ $$$$ bit set according to the target field
-	FieldBits boardWinOne;	//0000 000$ $$$$ $$$$ bit set if a board was conquered by P1
-	FieldBits boardWinTwo;	//0000 000$ $$$$ $$$$ bit set if a board was conquered by P2
+	WonState prevWonState;
+	BoardBits boardSet;
+	FieldBits fieldSet;
+	FieldBits boardWinOne;
+	FieldBits boardWinTwo;
+	//Previous win state of the board
+	inline WonState getPrevWonState(WonState afterMove){
+		return prevWonState;
+	}
+	//0..8, index of board
+	inline BoardBits getBoardSet(){
+		return boardSet;
+	}
+	//0000 000$ $$$$ $$$$ bit set according to the target field
+	inline FieldBits getFieldSet(){
+		return fieldSet;
+	}
+	//0000 000$ $$$$ $$$$ bit set if a board was conquered by P1
+	inline FieldBits getWonBoardPOne(){
+		return boardWinOne;
+	}
+	//0000 000$ $$$$ $$$$ bit set if a board was conquered by P2
+	inline FieldBits getWonBoardPTwo(){
+		return boardWinTwo;
+	}
 };
 
 class MoveHistory:public std::stack<Move>{

@@ -5,34 +5,38 @@
  *      Author: Andreas Molzer
  */
 #include "Input.hpp"
+#include "Debug.hpp"
 #include <string>
 #include <iostream>
 
-MoveDescriptor getMoveDescriptionFromInput(const char * input){
+MoveDescriptor getMoveDescriptionFromInput(char * input){
 	BoardBits board;
 	FieldBits field;
-	printf(input);
-	printf("->Input\n");
-	while(sscanf(input, " ")); //Skip previous spaces
-	if(sscanf(input, "%1hhu%1hu%c", &board, &field)!=2){
+	dbgPrint(input);
+	dbgPrint("->Input\n");
+	int off = 0;
+	while(off+=sscanf(input+off, " ")); //Skip previous spaces
+	if(sscanf(input+off, "%1hhu%1hu%c", &board, &field)!=2){
+		printf("Wrong input %s.\n", input);
 		board = 10;
 		field = 10;
 	}
 	board--;
 	field--;
 	field = 0x1 << field;
-	printf("Interpreted as %u, %u\n",board+1, field);
+	dbgPrint("Interpreted as %u, %u\n",board, field);
 	return MoveDescriptor{board, field};
 }
 
 MoveDescriptor getDescriptionOnStream(){
-	std::string input;
-	std::getline(std::cin, input);
-	return getMoveDescriptionFromInput(input.data());
+	char read[30];
+	while(scanf("%2c[\n]", read) != 2); //Wait for valid input
+	return getMoveDescriptionFromInput(read);
 }
 
 MoveDescriptor getInitDescriptorOnStream(){
-	std::string input;
-	std::getline(std::cin, input, ',');
-	return getMoveDescriptionFromInput(input.data());
+	char read[30];
+	while(scanf(" ", read)); //Skip previous ' '
+	while(scanf("%2c[,\n ]", read) != 2); // Wait for valid input
+	return getMoveDescriptionFromInput(read);
 }

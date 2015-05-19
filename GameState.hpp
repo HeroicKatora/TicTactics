@@ -14,8 +14,8 @@ enum InitResultType{
 	DUPLICATE = 1,		//Move was duplicate
 	INVALID = 2,		//A move was invalid (input could already catch)
 	MIDDLE_MOVE = 3,	//Move was in the most center, 5|5
-	FIELDOVERFLOW = 4,	//More than one move on the same field
-	BOARDOVERFLOW = 5,	//More than two moves on the same board
+	FIELD_OVERFLOW = 4,	//More than one move on the same field
+	BOARD_OVERFLOW = 5,	//More than two moves on the same board
 	NOT_DURING_INIT = 6	//Game already going
 };
 
@@ -75,9 +75,26 @@ public:
 	 */
 	bool isValidMove(Move& m);
 
+	/**
+	 * Initializes the board with the first 9 moves of each player
+	 */
 	InitResult initializeWithMoves(MoveDescriptor playerOne[9], MoveDescriptor playerTwo[9]);
 
+	/**
+	 * True if a player has won the game
+	 */
 	bool isWon();
 
+	/**
+	 * Checks if a specific player has won the game
+	 */
+	bool hasWon(bool playerOne);
+
+	/**
+	 * True if player one is to play, false if player two
+	 */
 	bool isPlayerOneTurn();
+
+	int print();
+	int sprint(char *);
 };

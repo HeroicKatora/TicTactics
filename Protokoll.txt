@@ -1,0 +1,55 @@
+If nothing on stderr, assume all good
+Meta characters in this document are []<>
+Escape character is \
+<Move>: B[1..9]F[1..9] //Board index, Field index
+<printReq>: <printFull>|<printBoard>
+<printFull>: pp
+<printBoard>: p[1..9]
+<Field>: One of the following (with their names)
+	VALID = '_';
+	EMPTY = '~';
+	Set1W1 = 'X';
+	Set1WA = 'x';
+	Set3W0	= '%';
+	Set3W1 = '+';
+	Set3W3 = '&';
+	Set3W2 = '0';
+	Set2W2 = 'O';
+	Set2WA = 'o';
+<Row>: <Field><Field><Field>
+<Board>: <Row>\n<Row>\n<Row>
+<GameState>: 
+	[[<Row> <Row> <Row>\n]x3
+	\n]x2
+	[<Row> <Row> <Row>]x3
+
+<Init error>:
+	<IError code> <IError index> <IError player>
+<IError code>:
+	DUPLICATE = 1,		//Move was duplicate
+	INVALID = 2,		//A move was invalid (input could already catch)
+	MIDDLE_MOVE = 3,	//Move was in the most center, 5|5
+	FIELD_OVERFLOW = 4,	//More than one move on the same field
+	BOARD_OVERFLOW = 5,	//More than two moves on the same board
+	NOT_DURING_INIT = 6	//Game already going
+<IError index>:[1..9] 	//Index of the wrong move
+<IError player>: 1		//If player One
+				 0		//If player Two
+	
+[Move input]: << <Move>
+1:	move\n<< stdin 
+	if(move ! <Move>) "Format exception\n" >> sterr; 1;
+
+[Init phase]:
+1:	p1M << [Move input]x9
+	p2M << [Move input]x9
+	if(error) "<Init error>\n" >> sterr; 1
+	
+[Turn]:
+	stdout << [*]x* << [[1:]|[2:]]\n
+	req\n<< stdin
+	if(req = <Move>) "Played <Move>\n" >> stdout
+	else if(req = <printReq>)
+		if(req = <printFull>) "<GameState>\n" >> stdout
+		if(req = <printBoard>) "<Board>\n" >> stdout
+	"Wrong input\n" >> stderr

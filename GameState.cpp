@@ -8,15 +8,16 @@
 #include "GameState.hpp"
 #include <cstdio>
 #include <popcntintrin.h>
+#include "Output.hpp"
 
 void GameState::applyAndChangeMove(Move& m) {
-	TicTacBoard *ticTacBoard = board.components+m.boardSet;
+	TicTacBoard *ticTacBoard = board.components+m.getBoardSet();
 
 	m.prevWonState = ticTacBoard->wonState;
-	ticTacBoard->applyMove(playerOneTurn, m.fieldSet);
+	ticTacBoard->applyMove(playerOneTurn, m.getFieldSet());
 	if(!TicTacBoard::isWon(m.prevWonState)){
 		//Potential new win
-		BoardBits wonBoard = 0x1 << m.boardSet;
+		BoardBits wonBoard = 0x1 << m.getBoardSet();
 		if(ticTacBoard->hasPlayerOneWon()) board.applyMove(true, wonBoard);
 		if(ticTacBoard->hasPlayerTwoWon()) board.applyMove(false, wonBoard);
 	}
@@ -29,12 +30,12 @@ void GameState::_applyMove(Move m){
 
 void GameState::undoMove(Move& m){
 	playerOneTurn = !playerOneTurn;
-	TicTacBoard *ticTacBoard = board.components+m.boardSet;
-	ticTacBoard->wonState = m.prevWonState;
-	if(playerOneTurn) ticTacBoard->setPlayerOne.bitsUsed -= m.fieldSet;
-	else ticTacBoard->setPlayerTwo.bitsUsed -= m.fieldSet;
-	board.setPlayerOne.bitsUsed -= m.boardWinOne;
-	board.setPlayerTwo.bitsUsed -= m.boardWinTwo;
+	TicTacBoard *ticTacBoard = board.components+m.getBoardSet();
+	ticTacBoard->wonState = m.getPrevWonState(ticTacBoard->wonState);
+	if(playerOneTurn) ticTacBoard->setPlayerOne.bitsUsed -= m.getFieldSet();
+	else ticTacBoard->setPlayerTwo.bitsUsed -= m.getFieldSet();
+	board.setPlayerOne.bitsUsed -= m.getWonBoardPOne();
+	board.setPlayerTwo.bitsUsed -= m.getWonBoardPTwo();
 }
 
 bool GameState::playMove(Move m) {
@@ -44,7 +45,9 @@ bool GameState::playMove(Move m) {
 		history.push(m);
 		return true;
 	}else{
-		printf("Invalid move Board %u Fieldbits %u\n", m.boardSet, m.fieldSet);
+		char moveS[30];
+		sprintMove(moveS, m);
+		printf("Invalid move %s\n", moveS);
 		return false;
 	}
 }
@@ -62,24 +65,26 @@ MoveSuggestion GameState::getBestKnownMove() {
 
 bool GameState::isValidMove(Move& m) {
 	//Trivial invalid
-	if(m.boardSet > 8) return false; //Invalid board index
-	if(m.fieldSet > 0x100) return false; //Invalid field index
-	if(__builtin_popcount(m.fieldSet) != 1)return false; //Invalid field descriptor (more than one bit set)
+	BoardBits boardB = m.getBoardSet();
+	FieldBits fieldB = m.getFieldSet();
+	if(boardB > 8) return false; //Invalid board index
+	if(fieldB > 0x100) return false; //Invalid field index
+	if(__builtin_popcount(fieldB) != 1) return false; //Invalid field descriptor (more than one bit set)
 
 	//More complex invalid
 	bool valid = true;
-	BoardBits setInTarget = board.components[m.boardSet].setPlayerOne |
-			board.components[m.boardSet].setPlayerTwo;
-	valid &= ((m.fieldSet & setInTarget) == 0);  //Is not on top of a set field
+	BoardBits setInTarget = board.components[boardB].setPlayerOne |
+			board.components[boardB].setPlayerTwo;
+	valid &= ((fieldB & setInTarget) == 0);  //Is not on top of a set field
 	if(history.empty()){
-		valid &= m.boardSet != 4 || m.fieldSet != 0x10; //not the mid mid field
+		valid &= boardB != 4 || fieldB != 0x10; //not the mid mid field
 	}else{
 		Move& previousMove = history.top();
-		BoardBits backMove = getFieldOfBoard(previousMove.boardSet);
-		valid &= m.fieldSet != backMove; //Don't make back move
+		BoardBits backMove = getFieldOfBoard(previousMove.getBoardSet());
+		valid &= fieldB != backMove; //Don't make back move
 		if((setInTarget | backMove) < 0x1FF){
 			//Has a move free, has to make a move in field
-			valid &= getBoardOfField(previousMove.fieldSet) == m.boardSet;
+			valid &= getBoardOfField(previousMove.getFieldSet()) == boardB;
 		}
 	}
 	return valid;
@@ -87,6 +92,11 @@ bool GameState::isValidMove(Move& m) {
 
 bool GameState::isWon(){
 	return board.isWon(board.wonState);
+}
+
+bool GameState::hasWon(bool playerOne){
+	if(playerOne) return board.hasPlayerOneWon();
+	else return board.hasPlayerTwoWon();
 }
 
 bool GameState::isPlayerOneTurn(){
@@ -127,13 +137,13 @@ InitResult GameState::checkSingleValidity(MoveDescriptor playerMoves[9]){
 		unsigned board = m.getBoardIndex();
 		unsigned field = m.getFieldIndex();
 		if(playerBoards[board] >= 2){
-			result.type = BOARDOVERFLOW;
+			result.type = BOARD_OVERFLOW;
 			result.info.index = i;
 			return result;
 		}
 		playerBoards[board]++;
 		if(playerFields[field] >= 1){
-			result.type = FIELDOVERFLOW;
+			result.type = FIELD_OVERFLOW;
 			result.info.index = i;
 			return result;
 		}
@@ -170,4 +180,12 @@ InitResult GameState::initializeWithMoves(MoveDescriptor playerOne[9], MoveDescr
 	}
 	result.type = InitResultType::PASSED;
 	return result;
+}
+
+int GameState::print(){
+	return printBigBoard(board, this);
+}
+
+int GameState::sprint(char * dest){
+	return sprintBigBoard(dest, board, this);
 }
