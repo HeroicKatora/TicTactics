@@ -52,13 +52,20 @@ void waitForLine(std::regex& regex){
 	}while(!matches(line, regex));
 }
 
+void waitForLine(char * wait){
+	do{
+		goToNextLine();
+	}while(!strcmp(line, wait));
+}
+
 int main(int argc, char **argv) {
-	printOut("Welcome to TicTactis Engine\n");
-	printOut("Triple T Madness");
+	printOut(EngineConstants::welcome);
+	waitForLine(reg::protocolStart);
+	printOut(EngineConstants::name);
 	engineSettingsPhase();
 	gameSettingsPhase();
 
-	printOut("Start game\n");
+	printOut(TTTPConst::lineStartGame);
 	initGame();
 	gameLoop();
 }
@@ -79,7 +86,7 @@ void nextInitMove(MoveDescriptor *array, int& existing, bool playerOne){
 		MoveDescriptor desc = getMoveDescriptor(line);
 		Move m(desc);
 		if(!state.isValidMove(m)){
-			printErr("Invalid move\n");
+			printErr(TTTPConst::lineInvalidMove);
 			looseGame(playerOne);
 		}
 		array[existing] = desc;
@@ -87,7 +94,7 @@ void nextInitMove(MoveDescriptor *array, int& existing, bool playerOne){
 	}else if(matches(line, reg::engineOp)){
 
 	}else{
-		printErr("Wrong input\n");
+		printErr(TTTPConst::lineWrongInput);
 		winGame(!playerOne);
 	}
 }
@@ -109,7 +116,7 @@ void initGame(){
 	result.info.index = -1;
 	result = state.initializeWithMoves(playerOne, playerTwo);
 	if(result.type != PASSED){
-		printErr("%u %u %u\n", result.type, result.info.index, result.info.playerOne);
+		printErr("%u %u %u", result.type, result.info.index, result.info.playerOne);
 		if(result.type == NOT_DURING_INIT){
 			infoPrint("The game is already ongoing, what were you thinking");
 		}else{
@@ -154,18 +161,18 @@ void initGame(){
 }
 
 void looseGame(bool playerOne){
-	printf("Player %s lost himself the game\n", playerOne? TTTPConst::p1 : TTTPConst::p2);
+	printOut(TTTPConst::playerLost, playerOne? TTTPConst::p1 : TTTPConst::p2);
 	winGame(!playerOne);
 }
 
 void winGame(bool winnerOne){
-	printf("Player %s has won\n", winnerOne? TTTPConst::p1 : TTTPConst::p2);
+	printOut(TTTPConst::playerWon, winnerOne? TTTPConst::p1 : TTTPConst::p2);
 	endGame();
 }
 
 void endGame(){
 	state.print();
-	printf("End TTTP\n");
+	printOut(TTTPConst::lineEndTTTP);
 	exit(0);
 }
 

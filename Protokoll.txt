@@ -15,7 +15,7 @@ Data with unknown or unexpected identifier can and should be discarded. An error
 
 This Protocol starts with [Game]
 
-<engine name>: "Triple T Madness"
+<engine name>: e.g. "Triple T Madness"
 <engine setting>: Engine hints, no must
 
 <setting>: One of
@@ -61,17 +61,18 @@ This Protocol starts with [Game]
 <IError index>:[1..9] 	//Index of the wrong move
 <IError player>: 1		//If player One
 				 0		//If player Two
+<player>: [Player One]|[Player Two]
 <EngineOp>:
 
 
 [Init phase]:
-	"Player 1 init\n" << stdin
+	"Player One init\n" << stdin
 	<Move>[] p1M, p2M
 	while(![Get Opening:p1M])
-	":Player 1 ready:\n" >> stdout
-	"Player 2 init\n" << stdin
+	":Player One is ready:\n" >> stdout
+	"Player Two init\n" << stdin
 	while(![Get Opening:p2M])
-	":Player 2 ready:\n" >> stdout
+	":Player Two is ready:\n" >> stdout
 	if([error:p1M, p2M]) 
 		"<Init error>\n" >> sterr
 		[Loose game:[traitor"]]

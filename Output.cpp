@@ -14,35 +14,33 @@ std::mutex outMut{};
 std::mutex errMut{};
 
 void printOut(char * content ...){
+	char out[TTTPConst::lineLength];
+	sprintf(out, "%s\n", content);
 	va_list args;
 	va_start(args, content);
 	outMut.lock();
-	vfprintf(stdout, content, args);
+	vfprintf(stdout, out, args);
 	outMut.unlock();
 	va_end(args);
 }
 
-void printOutV(char * begin, va_list cont){
-	outMut.lock();
-	vfprintf(stdout, begin, cont);
-	outMut.unlock();
-}
-
 void printErr(char * content, ...){
+	char out[TTTPConst::lineLength];
+	sprintf(out, "%s\n", content);
 	va_list args;
 	va_start(args, content);
 	errMut.lock();
-	vfprintf(stderr, content, args);
+	vfprintf(stderr, out, args);
 	errMut.unlock();
 	va_end(args);
 }
 
 void infoPrint(char * s, ...){
 	char out[TTTPConst::lineLength];
-	sprintf(out, ":%s:\n", s);
+	sprintf(out, ":%s:", s);
 	va_list args;
 	va_start(args, s);
-	printOutV(out, args);
+	printOut(out, args);
 	va_end(args);
 }
 

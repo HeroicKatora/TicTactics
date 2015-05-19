@@ -10,7 +10,9 @@
 #include "GameState.hpp"
 
 /**
+ * Omit the final new line, it is automatically added.
  * These methods give synchronized access to out and err, but may take longer to complete
+ * You should access these instead of directly.
  */
 void printOut(char *,...);
 void printErr(char *,...);

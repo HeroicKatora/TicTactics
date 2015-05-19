@@ -24,4 +24,17 @@ struct TTTPConst{
 
 	static char Set2W2 ;
 	static char Set2WA ;
+
+	static char * playerLost;
+	static char * playerWon;
+	static char * playerReady;
+	static char * lineInvalidMove;
+	static char * lineWrongInput;
+	static char * lineStartGame;
+	static char * lineEndTTTP;
+};
+
+struct EngineConstants{
+	static char * welcome;
+	static char * name;
 };

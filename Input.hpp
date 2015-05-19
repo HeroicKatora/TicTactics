@@ -11,6 +11,7 @@
 #include <regex>
 
 struct reg{
+	static std::regex protocolStart;
 	static std::regex commentStart;
 	static std::regex commentEnd;
 	static std::regex asynchronous;
