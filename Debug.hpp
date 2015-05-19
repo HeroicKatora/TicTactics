@@ -8,7 +8,5 @@
 
 template<typename... T>
 inline void dbgPrint(const char * s, T... args){
-#ifdef Debug
-	printf(s, args...);
-#endif
+	printf(":%s:\n", s, args...);
 }

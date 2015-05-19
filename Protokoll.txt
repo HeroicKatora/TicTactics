@@ -1,6 +1,32 @@
-If nothing on stderr, assume all good
-Meta characters in this document are []<>
-Escape character is \
+TTTP v1
+
+- If nothing on stderr, assume all good
+- Meta characters in this document are []<>
+- Escape character int this document is \
+- As long as line from in stream does not match format, skip line, if not specified otherwise
+- TTTP is new line based, all data comes in chunks of an integer number of lines
+- No data chunks on stdout shall interleave, interleaving chunks on stdin produce undefined
+behaviour, stderr is not strictly linear
+- Protocol lines may not be longer than 1000 characters
+- Output/Input starting with ":" shall be ignored for game flow, information only, until ":\n" is output
+- Asynchronous Data must have an identifier in the form \[<id>\] in front of it.
+Data with unknown or unexpected identifier can and should be discarded. An error musn't be thrown.
+- 
+
+This Protocol starts with [Game]
+
+<engine name>: "Triple T Madness"
+<engine setting>: Engine hints, no must
+
+<setting>: One of
+	[EnginePlayer:[P1]|[P2]|[None]]	//default None
+	[MoveTime:[0..]]				//0 means inifite time, default 0
+	[PlayerTime:[0..]]				//Total time for all turns, 0 infinite, default 0
+	[MoveIncrement:[0..]]			//Time gain per move played, default 0
+	[Initial moves:[0..9]]			//Initial moves per player, default 9
+	[Init limit per board:[1..9]]	//How many field of one board you can take during init phase, default 2
+
+<id>: [a..zA..Z]*
 <Move>: B[1..9]F[1..9] //Board index, Field index
 <printReq>: <printFull>|<printBoard>
 <printFull>: pp
@@ -19,9 +45,9 @@ Escape character is \
 <Row>: <Field><Field><Field>
 <Board>: <Row>\n<Row>\n<Row>
 <GameState>: 
-	[[<Row> <Row> <Row>\n]x3
-	\n]x2
-	[<Row> <Row> <Row>]x3
+	[[<Row> <Row> <Row>\n][3]
+	\n][2]
+	[<Row> <Row> <Row>][3]
 
 <Init error>:
 	<IError code> <IError index> <IError player>
@@ -35,21 +61,92 @@ Escape character is \
 <IError index>:[1..9] 	//Index of the wrong move
 <IError player>: 1		//If player One
 				 0		//If player Two
-	
-[Move input]: << <Move>
-1:	move\n<< stdin 
-	if(move ! <Move>) "Format exception\n" >> sterr; 1;
+<EngineOp>:
+
 
 [Init phase]:
-1:	p1M << [Move input]x9
-	p2M << [Move input]x9
-	if(error) "<Init error>\n" >> sterr; 1
+	"Player 1 init\n" << stdin
+	<Move>[] p1M, p2M
+	while(![Get Opening:p1M])
+	":Player 1 ready:\n" >> stdout
+	"Player 2 init\n" << stdin
+	while(![Get Opening:p2M])
+	":Player 2 ready:\n" >> stdout
+	if([error:p1M, p2M]) 
+		"<Init error>\n" >> sterr
+		[Loose game:[traitor"]]
+
+[Get Opening: <Move>[] moves]: << <bool>
+	in << stdin
+	if(in = <Move>)
+		moves <<+ [init: in]
+	else if(in = <EngineOp>)
+		[EngineOp: in]
+	else
+		"Wrong input\n" >> stderr
+		[End game]
+	if(len(moves) == [Inital moves])
+		<< true
+	<< false
+
+[init: <Move> in]: << <Move>
+	if(invalid move(m))
+		"Invalid move\n" >> stderr
+		[Loose game: player]
+	[:Internal operation, add initial move]
+	<< in
+
+[Turn]: << <bool>
+	in << stdin
+	if(in = <Move>)
+		[play: in]
+	else if(in = <EngineOp>)
+		[EngineOp: in]
+	else if(in = <printReq>)
+		if(in = <printFull>) "<GameState>\n" >> stdout
+		if(in = <printBoard>) "<Board>\n" >> stdout
+	else
+		"Wrong input\n" >> stderr
+		[End game: !player]
+	if(isGameOver())
+		<< false
+	else
+		<< true
+
+[EngineOp: <EngineOp> op]:
 	
-[Turn]:
-	stdout << [*]x* << [[1:]|[2:]]\n
-	req\n<< stdin
-	if(req = <Move>) "Played <Move>\n" >> stdout
-	else if(req = <printReq>)
-		if(req = <printFull>) "<GameState>\n" >> stdout
-		if(req = <printBoard>) "<Board>\n" >> stdout
-	"Wrong input\n" >> stderr
+
+[play: <Move> m]:
+	if(invalid move(m))
+		"Invalid move\n" >> stderr
+		[Loose game: player]
+	[:Internal operation, advances the turn]
+
+[Game]:
+	"TTTP v1\n" << stdin
+	"<engine name>\n" >> stdout
+	"Engine settings:\n" << stdin
+	["<engine setting>\n" << stdin]x?
+	"End settings\n" << stdin
+	"Game settings:\n" << stdin
+	["<setting>\n" << stdin]x?
+	"End settings\n" << stdin
+	"Start game\n" << stdin
+	"Start game\n" >> stdout
+	[Init phase]
+	while([Turn]);
+	[Win game:[winner]]
+	
+[Loose game:<player> player]:
+	"[player] lost himself the game\n" >> stdout
+	[Win game: !player]
+	
+[Win game:<player> winner]:
+	"[winner] has won\n" >> stdout
+	[End Game]
+	
+[End game]:
+	"<GameState>\n" >> stdout
+	"End TTTP\n" >> stdout
+	"End TTTP\n" << stdin (optional to wait)
+	[End]

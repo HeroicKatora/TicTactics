@@ -6,37 +6,50 @@
  */
 #include "Input.hpp"
 #include "Debug.hpp"
-#include <string>
-#include <iostream>
+#include <cstdio>
+#include <string.h>
 
-MoveDescriptor getMoveDescriptionFromInput(char * input){
-	BoardBits board;
-	FieldBits field;
-	dbgPrint(input);
-	dbgPrint("->Input\n");
-	int off = 0;
-	while(off+=sscanf(input+off, " ")); //Skip previous spaces
-	if(sscanf(input+off, "%1hhu%1hu%c", &board, &field)!=2){
-		printf("Wrong input %s.\n", input);
-		board = 10;
-		field = 10;
+/**
+ * Reads the next line, but at most most characters into the string.
+ * Returns the number of characters read.
+ */
+int readLine(char* dest, int most) {
+	fgets(dest, most, stdin);
+	return strlen(dest);
+}
+
+int nextProtocolLine(char *dest, int maxLineLength){
+	bool anotherLine = true;
+	bool inComment = false;
+	int len = 0;
+	while(anotherLine){
+		len = readLine(dest, maxLineLength);
+		if(!inComment){
+			inComment = matches(dest, reg_commentStart);
+		}
+		if(inComment){
+			inComment = !matches(dest, reg_commentEnd);
+		}else{
+			anotherLine = false;
+		}
 	}
-	board--;
-	field--;
-	field = 0x1 << field;
-	dbgPrint("Interpreted as %u, %u\n",board, field);
-	return MoveDescriptor{board, field};
+	return len;
 }
 
-MoveDescriptor getDescriptionOnStream(){
-	char read[30];
-	while(scanf("%2c[\n]", read) != 2); //Wait for valid input
-	return getMoveDescriptionFromInput(read);
+bool matches(char *word, char *pattern){
+	std::regex reg(pattern);
+	return matches(word, reg);
 }
 
-MoveDescriptor getInitDescriptorOnStream(){
-	char read[30];
-	while(scanf(" ", read)); //Skip previous ' '
-	while(scanf("%2c[,\n ]", read) != 2); // Wait for valid input
-	return getMoveDescriptionFromInput(read);
+bool matches(char *word, std::regex& reg){
+	return std::regex_match(word, reg);
+}
+
+MoveDescriptor getMoveDescriptor(char * source){
+	MoveDescriptor desc{};
+	sscanf(source, "B%1hhuF%1hu", desc.whichBoard, desc.whichField);
+	desc.whichBoard--;
+	desc.whichField--;
+	desc.whichField = 0x1 << desc.whichField;
+	return desc;
 }

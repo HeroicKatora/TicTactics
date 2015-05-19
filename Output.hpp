@@ -7,6 +7,9 @@
 #pragma once
 #include "GameState.hpp"
 
+char p1 = "One";
+char p2 = "Two";
+
 char VALID = '_';
 char EMPTY = '~';
 
@@ -20,6 +23,12 @@ char Set3W2 = '0';
 
 char Set2W2 = 'O';
 char Set2WA = 'o';
+
+/**
+ * These methods give synchronized access to out and err, but may take longer to complete
+ */
+void printOut(char *);
+void printErr(char *);
 
 int printMove(Move&);
 int printMove(MoveDescriptor&);
