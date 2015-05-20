@@ -99,9 +99,17 @@ public:
 	 */
 	bool isPlayerOneTurn();
 
+	/**
+	 * Prints the full game board
+	 */
 	int print();
 	int sprint(char *);
 
+	/**
+	 * Prints a single board, but with the surrounding game
+	 */
+	int print(int index);
+	int sprint(int index, char *);
 	/**
 	 * Ends setup phase and starts the game as it is initialized
 	 */

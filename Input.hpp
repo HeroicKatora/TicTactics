@@ -32,8 +32,13 @@ int readLine(char * dest, int most);
  */
 int nextProtocolLine(char * dest, int maxLineLength);
 
-bool matches(char * , char * pattern);
+bool matches(const char * word, const char * pattern);
 
-bool matches(char *word, std::regex& reg);
+bool matches(const char * word, std::regex& reg);
 
-MoveDescriptor getMoveDescriptor(char *);
+/**
+ * Tries to extract a move descriptor from the given string
+ */
+MoveDescriptor getMoveDescriptor(const char *);
+
+bool registerDynamicHandler(const char [], void (*)(char *));

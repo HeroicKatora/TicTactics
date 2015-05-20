@@ -27,6 +27,12 @@ struct TTTPConst{
 	static CC Set2W2 ;
 	static CC Set2WA ;
 
+	static CC lineSettingsEngine [];
+	static CC lineSettingsGame [];
+	static CC lineSettingsEnd [];
+
+	static CC linePrintFull [];
+
 	static CC linePlayerLost [];
 	static CC linePlayerWon [];
 	static CC linePlayerReady [];

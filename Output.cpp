@@ -111,9 +111,17 @@ int printRow(TicTacBoard& board, int row, GameState * surrGame, int boarInd){
 	return ret;
 }
 
-int printBoard(TicTacBoard& board) {
+int printRow(TicTacBoard& board, int row){
+	return printRow(board, row, NULL, 0);
+}
+
+int printBoard(TicTacBoard& board){
+	return printBoard(board);
+}
+
+int printBoard(TicTacBoard& board, GameState * game, int index) {
 	char mv [15];
-	int ret = sprintBoard(mv, board);
+	int ret = sprintBoard(mv, board, game, index);
 	printOut(mv);
 	return ret;
 }
@@ -129,10 +137,14 @@ int printBigBoard(TacTicBoard& board, GameState * surrGame) {
 	return ret;
 }
 
-int sprintBoard(char* dest, TicTacBoard& board) {
+int sprintBoard(char* dest, TicTacBoard& board){
+	return sprintBoard(dest, board, NULL, 0);
+}
+
+int sprintBoard(char* dest, TicTacBoard& board, GameState * surrGame, int index) {
 	int off = 0;
 	for(int i = 0;i<3;i++){
-		off += sprintRow(dest+off,board, i, NULL, 0);
+		off += sprintRow(dest+off,board, i, surrGame, index);
 		off += sprintf(dest+off, "\n");
 	}
 	return off;

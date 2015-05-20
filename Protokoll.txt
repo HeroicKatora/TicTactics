@@ -29,8 +29,8 @@ This Protocol starts with [Game]
 <id>: [a..zA..Z]*
 <Move>: B[1..9]F[1..9] //Board index, Field index
 <printReq>: <printFull>|<printBoard>
-<printFull>: print full
-<printBoard>: print [1..9]
+<printFull>: Print full
+<printBoard>: Print B[1..9]
 <Field>: One of the following (with their names)
 	VALID = '_';
 	EMPTY = '~';
@@ -62,17 +62,26 @@ This Protocol starts with [Game]
 <IError player>: 1		//If player One
 				 0		//If player Two
 <player>: [Player One]|[Player Two]
-<EngineOp>:
-
+<EngineOp>: One of
+	go <time> <time> //tells the engine to give asynchronous updates about best moves
+					 //First time is move time, second total time (increment is not to be altered during the game)
+	pause			//Tells the engine to pause calculation, without forcing a "memory loss"
+	stop			//Tells the engine to stop and drop all calculations done
+	
+<time>: One of
+	<integer>[m|s|ms]
+	<integer>m<integer>[s|ms]
+	<integer>s<integer>ms
+	<integer>m<integer>s<integer>ms
 
 [Init phase]:
 	"Player One init\n" << stdin
 	<Move>[] p1M, p2M
 	while(![Get Opening:p1M])
-	":Player One is ready:\n" >> stdout
+	":Player One is ready:\n" >> stdout	//optional, but recommended
 	"Player Two init\n" << stdin
 	while(![Get Opening:p2M])
-	":Player Two is ready:\n" >> stdout
+	":Player Two is ready:\n" >> stdout	//optional, but recommended
 	if([error:p1M, p2M]) 
 		"<Init error>\n" >> sterr
 		[Loose game:[traitor"]]
@@ -127,17 +136,22 @@ This Protocol starts with [Game]
 [Game]:
 	"TTTP v1\n" << stdin
 	"<engine name>\n" >> stdout
-	"Engine settings:\n" << stdin
-	["<engine setting>\n" << stdin]x?
-	"End settings\n" << stdin
-	"Game settings:\n" << stdin
-	["<setting>\n" << stdin]x?
-	"End settings\n" << stdin
-	"Start game\n" << stdin
+	[Settings phase]
 	"Start game\n" >> stdout
 	[Init phase]
 	while([Turn]);
 	[Win game:[winner]]
+
+[Settings phase]:
+	[	phase << stdin
+		if(phase = "Engine settings\n")
+			["<engine setting>\n" << stdin]x?
+			"End settings\n" << stdin
+		else if(phase = "Game settings\n")
+			["<setting>\n" << stdin]x?
+			"End settings\n" << stdin
+	]x?<1000
+	"Start game\n" << stdin
 	
 [Loose game:<player> player]:
 	"[player] lost himself the game\n" >> stdout

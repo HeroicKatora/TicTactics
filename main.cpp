@@ -33,6 +33,7 @@ void endGame();
  * Starts initialization
  */
 void initGame();
+void settingsPhase();
 void engineSettingsPhase();
 void gameSettingsPhase();
 void gameLoop();
@@ -68,13 +69,23 @@ int main(int argc, char **argv) {
 	printOut(EngineConstants::welcome);
 	waitForLine(reg::protocolStart);
 	printOut(EngineConstants::name);
-	engineSettingsPhase();
-	gameSettingsPhase();
-
+	settingsPhase();
 	state.start();
 	printOut(TTTPConst::lineStartGame);
 	initGame();
 	gameLoop();
+}
+
+void settingsPhase(){
+	for(int i = 1000;i-->0;){
+		goToNextLine();
+		if(matches(line, TTTPConst::lineSettingsEngine))
+			engineSettingsPhase();
+		else if(matches(line, TTTPConst::lineSettingsGame))
+			gameSettingsPhase();
+		else if(matches(line, TTTPConst::lineSettingsEnd))
+			break;
+	}
 }
 
 void gameLoop(){
@@ -219,7 +230,12 @@ void engineOp(){
  * Handles print operation line
  */
 void printReq(){
-	//TODO
+	if(matches(line, TTTPConst::linePrintFull)){
+		state.print();
+	}else{
+		char c = line[7]-'1'; //Dirty way !!
+		state.print(c);
+	}
 }
 
 /**

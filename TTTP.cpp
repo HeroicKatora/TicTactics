@@ -24,6 +24,12 @@ CC TTTPConst::Set3W2 = '0';
 CC TTTPConst::Set2W2 = 'O';
 CC TTTPConst::Set2WA = 'o';
 
+CC TTTPConst::lineSettingsEngine [] = "Engine setting";
+CC TTTPConst::lineSettingsGame [] = "Game settings";
+CC TTTPConst::lineSettingsEnd [] = "End settings";
+
+CC TTTPConst::linePrintFull [] = "Print full";
+
 CC TTTPConst::linePlayerLost [] = "%s lost himself the game";
 CC TTTPConst::linePlayerWon [] = "%s has won";
 CC TTTPConst::linePlayerReady [] = "%s is ready";

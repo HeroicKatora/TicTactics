@@ -190,6 +190,14 @@ int GameState::sprint(char * dest){
 	return sprintBigBoard(dest, board, this);
 }
 
+int GameState::print(int index){
+	return printBoard(board.components[index], this, index);
+}
+
+int GameState::sprint(int index, char * dest){
+	return sprintBoard(dest, board.components[index], this, index);
+}
+
 void GameState::start() {
 }
 
