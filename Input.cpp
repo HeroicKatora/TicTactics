@@ -20,6 +20,7 @@ std::regex reg::initP1 {"Player One init"};
 std::regex reg::initP2 {"Player Two init"};
 std::regex reg::move {"B[1..9]F[1..9]"};
 std::regex reg::engineOp {""};
+std::regex reg::printReq {"print ([1..9]|full)"};
 
 /**
  * Reads the next line, but at most most characters into the string.

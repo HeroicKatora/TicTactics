@@ -34,6 +34,7 @@ class GameState{
 	MoveHistory history;
 	Searcher searcher;
 	bool playerOneTurn;
+	bool inSetup;
 
 	/**
 	 * Applies a move to the board and sets its fields according to the current board state.
@@ -51,7 +52,10 @@ class GameState{
 	InitResult checkSingleValidity(MoveDescriptor playerMoves[9]);
 public:
 
-	GameState():board(), history(), searcher(this), playerOneTurn(true){}
+	/**
+	 * Constructs a game that is in setup phase
+	 */
+	GameState():board(), history(), searcher(this), playerOneTurn(true), inSetup(true){}
 
 	/**
 	 * Checks if a move is valid and then plays it.
@@ -97,4 +101,14 @@ public:
 
 	int print();
 	int sprint(char *);
+
+	/**
+	 * Ends setup phase and starts the game as it is initialized
+	 */
+	void start();
+
+	/**
+	 * Returns an unmodifiable reference to the searcher
+	 */
+	const Searcher& getSearcher();
 };

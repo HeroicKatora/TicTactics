@@ -14,10 +14,10 @@
  * These methods give synchronized access to out and err, but may take longer to complete
  * You should access these instead of directly.
  */
-void printOut(char *,...);
-void printErr(char *,...);
+void printOut(const char *,...);
+void printErr(const char *,...);
 
-void infoPrint(char *, ...);
+void infoPrint(const char *, ...);
 
 int printMove(Move&);
 int printMove(MoveDescriptor&);

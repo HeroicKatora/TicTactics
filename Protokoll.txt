@@ -29,8 +29,8 @@ This Protocol starts with [Game]
 <id>: [a..zA..Z]*
 <Move>: B[1..9]F[1..9] //Board index, Field index
 <printReq>: <printFull>|<printBoard>
-<printFull>: pp
-<printBoard>: p[1..9]
+<printFull>: print full
+<printBoard>: print [1..9]
 <Field>: One of the following (with their names)
 	VALID = '_';
 	EMPTY = '~';
@@ -50,7 +50,7 @@ This Protocol starts with [Game]
 	[<Row> <Row> <Row>][3]
 
 <Init error>:
-	<IError code> <IError index> <IError player>
+	Init error <IError code> <IError index> <IError player>
 <IError code>:
 	DUPLICATE = 1,		//Move was duplicate
 	INVALID = 2,		//A move was invalid (input could already catch)
@@ -82,6 +82,7 @@ This Protocol starts with [Game]
 	in << stdin
 	if(in = <Move>)
 		moves <<+ [init: in]
+		[:Internal operation, add initial move]
 	else if(in = <EngineOp>)
 		[EngineOp: in]
 	else
@@ -95,7 +96,6 @@ This Protocol starts with [Game]
 	if(invalid move(m))
 		"Invalid move\n" >> stderr
 		[Loose game: player]
-	[:Internal operation, add initial move]
 	<< in
 
 [Turn]: << <bool>
@@ -109,7 +109,7 @@ This Protocol starts with [Game]
 		if(in = <printBoard>) "<Board>\n" >> stdout
 	else
 		"Wrong input\n" >> stderr
-		[End game: !player]
+		[Win game: !player]
 	if(isGameOver())
 		<< false
 	else

@@ -6,35 +6,51 @@
  */
 #pragma once
 
+typedef const char CC;
+
 struct TTTPConst{
 	constexpr static int lineLength = 1000;
 
-	static char *p1; //One
-	static char *p2; //"Two"
+	static CC p1 []; //One
+	static CC p2 []; //"Two"
 
-	static char VALID ;
-	static char EMPTY ;
-	static char Set1W1 ;
-	static char Set1WA ;
+	static CC VALID ;
+	static CC EMPTY ;
+	static CC Set1W1 ;
+	static CC Set1WA ;
 
-	static char Set3W0 ;
-	static char Set3W1 ;
-	static char Set3W3 ;
-	static char Set3W2 ;
+	static CC Set3W0 ;
+	static CC Set3W1 ;
+	static CC Set3W3 ;
+	static CC Set3W2 ;
 
-	static char Set2W2 ;
-	static char Set2WA ;
+	static CC Set2W2 ;
+	static CC Set2WA ;
 
-	static char * playerLost;
-	static char * playerWon;
-	static char * playerReady;
-	static char * lineInvalidMove;
-	static char * lineWrongInput;
-	static char * lineStartGame;
-	static char * lineEndTTTP;
+	static CC linePlayerLost [];
+	static CC linePlayerWon [];
+	static CC linePlayerReady [];
+	static CC lineInvalidMove [];
+	static CC lineInvalidInit [];
+	static CC lineWrongInput [];
+	static CC lineStartGame [];
+	static CC lineEndTTTP [];
 };
 
 struct EngineConstants{
-	static char * welcome;
-	static char * name;
+	static CC welcome [];
+	static CC name [];
+
+	static CC commentInitIncorrectInput [];
+	static CC commentInitMistake [];
+	static CC commentInitDuringGame [];
+
+	static CC initDuplicate [];
+	static CC initInvalid [];
+	static CC initMiddleMove [];
+	static CC initMiddleComment [];
+	static CC initBoardOverflow [];
+	static CC initBoardComment [];
+	static CC initFieldOverflow [];
+	static CC initFieldComment [];
 };

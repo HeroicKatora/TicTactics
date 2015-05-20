@@ -15,7 +15,6 @@ MoveSuggestion Searcher::getBestKnownMove(){
 
 }
 
-
 void Searcher::runParallel() {
 
 }
@@ -31,4 +30,3 @@ void Searcher::notifyMoveMade(Move& move) {
 void Searcher::setPause(bool pause) {
 	this->pause = pause;
 }
-

@@ -189,3 +189,10 @@ int GameState::print(){
 int GameState::sprint(char * dest){
 	return sprintBigBoard(dest, board, this);
 }
+
+void GameState::start() {
+}
+
+const Searcher& GameState::getSearcher() {
+	return searcher;
+}

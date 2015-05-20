@@ -37,6 +37,12 @@ void engineSettingsPhase();
 void gameSettingsPhase();
 void gameLoop();
 
+void playMove();
+void engineOp();
+void printReq();
+void setupEngine();
+void setupGame();
+
 char line [TTTPConst::lineLength];
 
 void goToNextLine(){
@@ -52,7 +58,7 @@ void waitForLine(std::regex& regex){
 	}while(!matches(line, regex));
 }
 
-void waitForLine(char * wait){
+void waitForLine(const char * wait){
 	do{
 		goToNextLine();
 	}while(!strcmp(line, wait));
@@ -65,6 +71,7 @@ int main(int argc, char **argv) {
 	engineSettingsPhase();
 	gameSettingsPhase();
 
+	state.start();
 	printOut(TTTPConst::lineStartGame);
 	initGame();
 	gameLoop();
@@ -73,9 +80,16 @@ int main(int argc, char **argv) {
 void gameLoop(){
 	while(!state.isWon()){
 		goToNextLine();
-		MoveDescriptor desc = getMoveDescriptor(line);
-		//FIXME according to protocol
-		state.playMove(Move(desc));
+		if(matches(line, reg::move)){
+			playMove();
+		}else if(matches(line, reg::engineOp)){
+			engineOp();
+		}else if(matches(line, reg::printReq)){
+			printReq();
+		}else{
+			printOut(TTTPConst::lineWrongInput);
+			winGame(!state.isPlayerOneTurn());
+		}
 	}
 	winGame(state.hasWon(true));
 }
@@ -92,7 +106,7 @@ void nextInitMove(MoveDescriptor *array, int& existing, bool playerOne){
 		array[existing] = desc;
 		existing++;
 	}else if(matches(line, reg::engineOp)){
-
+		engineOp();
 	}else{
 		printErr(TTTPConst::lineWrongInput);
 		winGame(!playerOne);
@@ -116,12 +130,12 @@ void initGame(){
 	result.info.index = -1;
 	result = state.initializeWithMoves(playerOne, playerTwo);
 	if(result.type != PASSED){
-		printErr("%u %u %u", result.type, result.info.index, result.info.playerOne);
+		printErr(TTTPConst::lineInvalidInit, result.type, result.info.index, result.info.playerOne);
 		if(result.type == NOT_DURING_INIT){
-			infoPrint("The game is already ongoing, what were you thinking");
+			infoPrint(EngineConstants::commentInitDuringGame);
 		}else{
-			infoPrint("Some player failed to give correct input");
-			const char * player = result.info.playerOne? "Player One":"Player Two";
+			infoPrint(EngineConstants::commentInitIncorrectInput);
+			const char * player = result.info.playerOne? TTTPConst::p1:TTTPConst::p2;
 			std::string fault, move, additional;
 			additional = "";
 			char mov[30];
@@ -132,28 +146,28 @@ void initGame(){
 			move = mov;
 			switch(result.type){
 			case DUPLICATE:
-				fault = " duplicate move";
+				fault = EngineConstants::initDuplicate;
 				break;
 			case INVALID:
-				fault = "n invalid move";
+				fault = EngineConstants::initInvalid;
 				sprintf(mov, "%u", result.info.index+1);
 				break;
 			case MIDDLE_MOVE:
-				fault = " middle move";
-				additional = "\nYou can not move into the mid during initial phase.";
+				fault = EngineConstants::initMiddleMove;
+				additional = EngineConstants::initMiddleComment;
 				break;
 			case FIELD_OVERFLOW:
-				fault = " field overflow";
-				additional = "\nYou can only place one mark on equivalent fields.";
+				fault = EngineConstants::initFieldOverflow;
+				additional = EngineConstants::initFieldComment;
 				break;
 			case BOARD_OVERFLOW:
-				fault = " board overflow";
-				additional = "\nYou can only place two mark on the same board.";
+				fault = EngineConstants::initBoardOverflow;
+				additional = EngineConstants::initBoardComment;
 				break;
 			default:
 				break;
 			}
-			infoPrint("%s has a%s with move %s%s.", player, fault.data(), move.data(), additional.data());
+			infoPrint(EngineConstants::commentInitMistake, player, fault.data(), move.data(), additional.data());
 		}
 		looseGame(result.info.playerOne);
 	}
@@ -161,12 +175,12 @@ void initGame(){
 }
 
 void looseGame(bool playerOne){
-	printOut(TTTPConst::playerLost, playerOne? TTTPConst::p1 : TTTPConst::p2);
+	printOut(TTTPConst::linePlayerLost, playerOne? TTTPConst::p1 : TTTPConst::p2);
 	winGame(!playerOne);
 }
 
 void winGame(bool winnerOne){
-	printOut(TTTPConst::playerWon, winnerOne? TTTPConst::p1 : TTTPConst::p2);
+	printOut(TTTPConst::linePlayerWon, winnerOne? TTTPConst::p1 : TTTPConst::p2);
 	endGame();
 }
 
@@ -176,17 +190,43 @@ void endGame(){
 	exit(0);
 }
 
+void engineSettingsPhase(){
+	for(goToNextLine(); !matches(line, reg::endSettings); goToNextLine()){
+		setupEngine();
+	}
+}
+
+void gameSettingsPhase(){
+	for(goToNextLine(); !matches(line, reg::endSettings); goToNextLine()){
+		setupGame();
+	}
+}
+
+void playMove(){
+	MoveDescriptor desc = getMoveDescriptor(line);
+	//FIXME according to protocol
+	state.playMove(Move(desc));
+}
+
+/**
+ * Handles engine operation line
+ */
+void engineOp(){
+	//TODO
+}
+
+/**
+ * Handles print operation line
+ */
+void printReq(){
+	//TODO
+}
+
 /**
  * Sets up the engine with the current line
  */
 void setupEngine(){
 	//TODO
-}
-
-void engineSettingsPhase(){
-	for(goToNextLine(); !matches(line, reg::endSettings); goToNextLine()){
-		setupEngine();
-	}
 }
 
 /**
@@ -196,8 +236,3 @@ void setupGame(){
 	//TODO
 }
 
-void gameSettingsPhase(){
-	for(goToNextLine(); !matches(line, reg::endSettings); goToNextLine()){
-		setupGame();
-	}
-}

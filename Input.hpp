@@ -22,6 +22,7 @@ struct reg{
 	static std::regex initP2;
 	static std::regex move;
 	static std::regex engineOp;
+	static std::regex printReq;
 };
 
 int readLine(char * dest, int most);

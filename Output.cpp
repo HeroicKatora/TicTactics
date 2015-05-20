@@ -13,7 +13,7 @@
 std::mutex outMut{};
 std::mutex errMut{};
 
-void printOut(char * content ...){
+void printOut(const char * content ...){
 	char out[TTTPConst::lineLength];
 	sprintf(out, "%s\n", content);
 	va_list args;
@@ -24,7 +24,7 @@ void printOut(char * content ...){
 	va_end(args);
 }
 
-void printErr(char * content, ...){
+void printErr(const char * content, ...){
 	char out[TTTPConst::lineLength];
 	sprintf(out, "%s\n", content);
 	va_list args;
@@ -35,7 +35,7 @@ void printErr(char * content, ...){
 	va_end(args);
 }
 
-void infoPrint(char * s, ...){
+void infoPrint(const char * s, ...){
 	char out[TTTPConst::lineLength];
 	sprintf(out, ":%s:", s);
 	va_list args;
