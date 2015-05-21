@@ -17,7 +17,8 @@
 void printOut(const char *,...);
 void printErr(const char *,...);
 
-void infoPrint(const char *, ...);
+void printInfo(const char *, ...);
+void printChannel(const char *, const char *,...);
 
 int printMove(Move&);
 int printMove(MoveDescriptor&);

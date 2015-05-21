@@ -15,13 +15,14 @@ struct BoardField{
 
 	BoardField();
 	BoardField(FieldBits bits);
+
 	FieldBits bitsUsed;
 
 	BoardField operator &(const BoardField& other);
 	BoardField operator |(const BoardField& other);
 	bool operator==(const BoardField& other);
 
-	operator FieldBits(){
+	explicit operator FieldBits(){
 		return (FieldBits) bitsUsed;
 	};
 	/**
@@ -60,11 +61,14 @@ struct TicTacBoard{
  */
 struct TacTicBoard:TicTacBoard{
 	TicTacBoard components[9];
+	TacTicBoard(){
+		for(int i = 0;i<9;i++){
+			components[i] = TicTacBoard();
+		}
+	}
 };
 
-const BoardField winBoards [] =
-		{BoardField{0x7}, BoardField{0x38}, BoardField{0x1C}, 	//waagrecht
-		BoardField{0x49}, BoardField{0xA2}, BoardField{0x124},	//senkrecht
-		BoardField{0x111}, BoardField{0x54} };					//diagonal
-
-const BoardField fullBoard = BoardField{0x1FF};
+struct Fields{
+	static const BoardField winBoards [9];
+	static const BoardField fullBoard;
+};

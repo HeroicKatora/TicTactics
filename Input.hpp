@@ -25,12 +25,12 @@ struct reg{
 	static std::regex printReq;
 };
 
-int readLine(char * dest, int most);
+int readLine(char * dest, unsigned most);
 
 /**
  * Skips all lines marked as optional and then returns the next line that is not
  */
-int nextProtocolLine(char * dest, int maxLineLength);
+int nextProtocolLine(char * dest, unsigned maxLineLength);
 
 bool matches(const char * word, const char * pattern);
 

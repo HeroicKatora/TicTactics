@@ -9,7 +9,7 @@
 typedef const char CC;
 
 struct TTTPConst{
-	constexpr static int lineLength = 1000;
+	constexpr static unsigned lineLength = 1000;
 
 	static CC p1 []; //One
 	static CC p2 []; //"Two"
@@ -27,6 +27,10 @@ struct TTTPConst{
 	static CC Set2W2 ;
 	static CC Set2WA ;
 
+	static CC channelDebug [];
+	static CC channelChat [];
+	static CC channelMeta [];
+
 	static CC lineSettingsEngine [];
 	static CC lineSettingsGame [];
 	static CC lineSettingsEnd [];
@@ -37,7 +41,7 @@ struct TTTPConst{
 	static CC linePlayerWon [];
 	static CC linePlayerReady [];
 	static CC lineInvalidMove [];
-	static CC lineInvalidInit [];
+	static CC lineInitError [];
 	static CC lineWrongInput [];
 	static CC lineStartGame [];
 	static CC lineEndTTTP [];
@@ -49,6 +53,7 @@ struct EngineConstants{
 
 	static CC commentInitIncorrectInput [];
 	static CC commentInitMistake [];
+	static CC commentInitPlayerReady [];
 	static CC commentInitDuringGame [];
 
 	static CC initDuplicate [];

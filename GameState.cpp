@@ -47,7 +47,7 @@ bool GameState::playMove(Move m) {
 	}else{
 		char moveS[30];
 		sprintMove(moveS, m);
-		printf("Invalid move %s\n", moveS);
+		printInfo("Invalid move %s\n", moveS);
 		return false;
 	}
 }
@@ -73,14 +73,14 @@ bool GameState::isValidMove(Move& m) {
 
 	//More complex invalid
 	bool valid = true;
-	BoardBits setInTarget = board.components[boardB].setPlayerOne |
-			board.components[boardB].setPlayerTwo;
+	BoardBits setInTarget = ((BoardBits)board.components[boardB].setPlayerOne) |
+			((BoardBits) board.components[boardB].setPlayerTwo);
 	valid &= ((fieldB & setInTarget) == 0);  //Is not on top of a set field
 	if(history.empty()){
 		valid &= boardB != 4 || fieldB != 0x10; //not the mid mid field
 	}else{
 		Move& previousMove = history.top();
-		BoardBits backMove = getFieldOfBoard(previousMove.getBoardSet());
+		FieldBits backMove = getFieldOfBoard(previousMove.getBoardSet());
 		valid &= fieldB != backMove; //Don't make back move
 		if((setInTarget | backMove) < 0x1FF){
 			//Has a move free, has to make a move in field
@@ -201,6 +201,6 @@ int GameState::sprint(int index, char * dest){
 void GameState::start() {
 }
 
-const Searcher& GameState::getSearcher() {
+Searcher& GameState::getSearcher() {
 	return searcher;
 }

@@ -30,6 +30,7 @@ struct InitResult{
 };
 
 class GameState{
+	friend Searcher;
 	TacTicBoard board;
 	MoveHistory history;
 	Searcher searcher;
@@ -59,7 +60,7 @@ public:
 
 	/**
 	 * Checks if a move is valid and then plays it.
-	 * Return is if the move was played
+	 * Return is if the move was valid
 	 */
 	bool playMove(Move m);
 
@@ -116,7 +117,7 @@ public:
 	void start();
 
 	/**
-	 * Returns an unmodifiable reference to the searcher
+	 * Returns a reference to the searcher
 	 */
-	const Searcher& getSearcher();
+	Searcher& getSearcher();
 };

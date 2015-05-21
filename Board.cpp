@@ -6,8 +6,14 @@
  */
 #include "Board.hpp"
 
-BoardField::BoardField(FieldBits bits){
-	bitsUsed = bits;
+const BoardField Fields::winBoards [] =
+		{BoardField(0x7u), BoardField(0x38u), BoardField(0x1Cu), 	//waagrecht
+		BoardField(0x49u), BoardField(0xA2u), BoardField(0x124u),	//senkrecht
+		BoardField(0x111u), BoardField(0x54u) };					//diagonal
+const BoardField Fields::fullBoard = BoardField(0x1FF);
+
+
+BoardField::BoardField(FieldBits bits):bitsUsed(bits){
 }
 
 bool BoardField::getStateOfCell(unsigned index) {
@@ -19,7 +25,7 @@ bool TicTacBoard::hasPlayerOneWon() {
 	if(wonState & WONP1) return true;
 	if(wonState == ONLYBOTH) return false;
 	for(int i = 0;i<8;i++){
-		if((setPlayerOne & winBoards[i])==winBoards[i]) return true;
+		if((setPlayerOne & Fields::winBoards[i])==Fields::winBoards[i]) return true;
 	}
 	return false;
 }
@@ -28,7 +34,7 @@ bool TicTacBoard::hasPlayerTwoWon() {
 	if(wonState & WONP2) return true;
 	if(wonState == ONLYBOTH) return false;
 	for(int i = 0;i<8;i++){
-		if((setPlayerTwo & winBoards[i])==winBoards[i]) return true;
+		if((setPlayerTwo & Fields::winBoards[i])==Fields::winBoards[i]) return true;
 	}
 	return false;
 }
@@ -55,5 +61,5 @@ bool BoardField::operator ==(const BoardField& other) {
 	return bitsUsed == other.bitsUsed;
 }
 
-BoardField::BoardField() :bitsUsed(0){
+BoardField::BoardField() :bitsUsed((FieldBits) 0){
 }

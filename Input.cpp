@@ -7,33 +7,36 @@
 #include "Input.hpp"
 #include "Debug.hpp"
 #include <cstdio>
+#include <iostream>
 #include <string.h>
 #include <unordered_map> //I don't know why I even use hash maps here ^^
 
-std::regex reg::protocolStart{"TTTP v1"};
-std::regex reg::commentStart{":.*"};
-std::regex reg::commentEnd {".*:"};
-std::regex reg::asynchronous {"\\[.*\\].*"};
-std::regex reg::startGame {"Start game"};
-std::regex reg::startTurns {"Start turns"};
-std::regex reg::endSettings {"End settings"};
-std::regex reg::initP1 {"Player One init"};
-std::regex reg::initP2 {"Player Two init"};
-std::regex reg::move {"B[1..9]F[1..9]"};
-std::regex reg::engineOp {""};
-std::regex reg::printReq {"Print (B[1..9]|full)"};
+std::regex reg::protocolStart ("TTTP v1");
+std::regex reg::commentStart(":.*");
+std::regex reg::commentEnd (".*:");
+std::regex reg::asynchronous ("\\[.*\\].*");
+std::regex reg::startGame ("Start game");
+std::regex reg::startTurns ("Start turns");
+std::regex reg::endSettings ("End settings");
+std::regex reg::initP1 ("Player One init");
+std::regex reg::initP2 ("Player Two init");
+std::regex reg::move ("B[1-9]F[1-9]");
+std::regex reg::engineOp ("");
+std::regex reg::printReq ("Print (B[1-9]|full)");
 
-std::unordered_map<std::string , void (*)(char *)> dynIDMap{};
+std::unordered_map<std::string , void (*)(char *)> dynIDMap {};
 /**
  * Reads the next line, but at most most characters into the string.
  * Returns the number of characters read.
  */
-int readLine(char* dest, int most) {
-	fgets(dest, most, stdin);
+int readLine(char* dest, unsigned most) {
+	std::string tmpL("");
+	std::getline(std::cin, tmpL);
+	sprintf(dest, "%.*s", most, tmpL.data());
 	return strlen(dest);
 }
 
-int nextProtocolLine(char *dest, int maxLineLength){
+int nextProtocolLine(char *dest, unsigned maxLineLength){
 	bool anotherLine = true;
 	bool inComment = false;
 	int len = 0;
@@ -47,7 +50,6 @@ int nextProtocolLine(char *dest, int maxLineLength){
 		}else{
 			if(matches(dest, reg::asynchronous)){
 				anotherLine = true;
-
 			}else{
 				anotherLine = false;
 			}
@@ -67,7 +69,7 @@ bool matches(const char *word, std::regex& reg){
 
 MoveDescriptor getMoveDescriptor(const char * source){
 	MoveDescriptor desc{};
-	sscanf(source, "B%1hhuF%1hu", desc.whichBoard, desc.whichField);
+	sscanf(source, "B%1huF%1hu", &desc.whichBoard, &desc.whichField);
 	desc.whichBoard--;
 	desc.whichField--;
 	desc.whichField = 0x1 << desc.whichField;

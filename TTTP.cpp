@@ -24,6 +24,10 @@ CC TTTPConst::Set3W2 = '0';
 CC TTTPConst::Set2W2 = 'O';
 CC TTTPConst::Set2WA = 'o';
 
+CC TTTPConst::channelDebug [] = "TTTP:Debug";
+CC TTTPConst::channelChat [] = "TTTP:Chat";
+CC TTTPConst::channelMeta [] = "TTTP:Meta";
+
 CC TTTPConst::lineSettingsEngine [] = "Engine setting";
 CC TTTPConst::lineSettingsGame [] = "Game settings";
 CC TTTPConst::lineSettingsEnd [] = "End settings";
@@ -34,7 +38,7 @@ CC TTTPConst::linePlayerLost [] = "%s lost himself the game";
 CC TTTPConst::linePlayerWon [] = "%s has won";
 CC TTTPConst::linePlayerReady [] = "%s is ready";
 CC TTTPConst::lineInvalidMove [] = "Invalid move";
-CC TTTPConst::lineInvalidInit [] = "Init error %u %u %u";
+CC TTTPConst::lineInitError [] = "Init error %u %u %u";
 CC TTTPConst::lineWrongInput [] = "Wrong input";
 CC TTTPConst::lineStartGame [] = "Start game";
 CC TTTPConst::lineEndTTTP [] = "End TTTP";
@@ -44,6 +48,7 @@ CC EngineConstants::welcome [] = "Welcome to TicTactis Engine";
 
 CC EngineConstants::commentInitIncorrectInput [] = "Some player failed to give correct input";
 CC EngineConstants::commentInitMistake [] = "%s has a%s with move %s%s.";
+CC EngineConstants::commentInitPlayerReady [] = "%s is ready";
 CC EngineConstants::commentInitDuringGame [] = "The game is already ongoing, what were you thinking";
 
 CC EngineConstants::initDuplicate [] = " duplicate move";

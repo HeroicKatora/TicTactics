@@ -35,9 +35,18 @@ void printErr(const char * content, ...){
 	va_end(args);
 }
 
-void infoPrint(const char * s, ...){
+void printInfo(const char * s, ...){
 	char out[TTTPConst::lineLength];
 	sprintf(out, ":%s:", s);
+	va_list args;
+	va_start(args, s);
+	printOut(out, args);
+	va_end(args);
+}
+
+void printChannel(const char * identifier, const char * s, ...){
+	char out[TTTPConst::lineLength];
+	sprintf(out, "[%s]%s", identifier, s);
 	va_list args;
 	va_start(args, s);
 	printOut(out, args);
@@ -163,9 +172,9 @@ int sprintBigBoard(char* dest, TacTicBoard& board, GameState * surrGame) {
 			off += sprintRow(dest+off, board.components[3*i+1], j, surrGame, 3*i+1);
 			off += sprintf(dest+off, " ");
 			off += sprintRow(dest+off, board.components[3*i+2], j, surrGame, 3*i+2);
-			off += sprintf(dest+off, "\n");
+			if(i < 2 || j < 2) off += sprintf(dest+off, "\n");
 		}
-		off += sprintf(dest+off, "\n");
+		if(i < 2) off += sprintf(dest+off, "\n");
 	}
 	return off;
 }

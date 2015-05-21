@@ -9,10 +9,12 @@
 #include "GameState.hpp"
 #include "Debug.hpp"
 #include "Output.hpp"
+#include "EngineController.hpp"
 #include <cstdlib>
 #include <string>
 
 GameState state{};
+EngineController engineControl{state.getSearcher()};
 
 /**
  * Looses the game for a player (from his fault)
@@ -50,13 +52,18 @@ void goToNextLine(){
 	nextProtocolLine(line, TTTPConst::lineLength);
 }
 
+bool sink(){
+	printChannel(TTTPConst::channelDebug, "Unexpected input");
+	return true;
+};
+
 /**
  * Waits for a line matching the regex
  */
 void waitForLine(std::regex& regex){
 	do{
 		goToNextLine();
-	}while(!matches(line, regex));
+	}while(!matches(line, regex) && sink());
 }
 
 void waitForLine(const char * wait){
@@ -83,7 +90,7 @@ void settingsPhase(){
 			engineSettingsPhase();
 		else if(matches(line, TTTPConst::lineSettingsGame))
 			gameSettingsPhase();
-		else if(matches(line, TTTPConst::lineSettingsEnd))
+		else if(matches(line, TTTPConst::lineStartGame))
 			break;
 	}
 }
@@ -98,7 +105,7 @@ void gameLoop(){
 		}else if(matches(line, reg::printReq)){
 			printReq();
 		}else{
-			printOut(TTTPConst::lineWrongInput);
+			printErr(TTTPConst::lineWrongInput);
 			winGame(!state.isPlayerOneTurn());
 		}
 	}
@@ -120,6 +127,7 @@ void nextInitMove(MoveDescriptor *array, int& existing, bool playerOne){
 		engineOp();
 	}else{
 		printErr(TTTPConst::lineWrongInput);
+		printErr(line);
 		winGame(!playerOne);
 	}
 }
@@ -131,21 +139,20 @@ void initGame(){
 	int done = 0;
 	waitForLine(reg::initP1);
 	while(done < 9) nextInitMove(playerOne, done, true);
-
+	printChannel(TTTPConst::channelDebug, EngineConstants::commentInitPlayerReady, TTTPConst::p1);
 	done = 0;
 	waitForLine(reg::initP2);
 	while(done < 9) nextInitMove(playerTwo, done, false);
+	printChannel(TTTPConst::channelDebug, EngineConstants::commentInitPlayerReady, TTTPConst::p2);
 
 	InitResult result;
-	result.type = INVALID;
-	result.info.index = -1;
 	result = state.initializeWithMoves(playerOne, playerTwo);
 	if(result.type != PASSED){
-		printErr(TTTPConst::lineInvalidInit, result.type, result.info.index, result.info.playerOne);
+		printErr(TTTPConst::lineInitError, result.type, result.info.index, result.info.playerOne);
 		if(result.type == NOT_DURING_INIT){
-			infoPrint(EngineConstants::commentInitDuringGame);
+			printInfo(EngineConstants::commentInitDuringGame);
 		}else{
-			infoPrint(EngineConstants::commentInitIncorrectInput);
+			printInfo(EngineConstants::commentInitIncorrectInput);
 			const char * player = result.info.playerOne? TTTPConst::p1:TTTPConst::p2;
 			std::string fault, move, additional;
 			additional = "";
@@ -178,15 +185,16 @@ void initGame(){
 			default:
 				break;
 			}
-			infoPrint(EngineConstants::commentInitMistake, player, fault.data(), move.data(), additional.data());
+			printInfo(EngineConstants::commentInitMistake, player, fault.data(), move.data(), additional.data());
 		}
 		looseGame(result.info.playerOne);
 	}
+	printChannel(TTTPConst::channelDebug, "Init phase is over");
 	waitForLine(reg::startTurns);
 }
 
 void looseGame(bool playerOne){
-	printOut(TTTPConst::linePlayerLost, playerOne? TTTPConst::p1 : TTTPConst::p2);
+	printErr(TTTPConst::linePlayerLost, playerOne? TTTPConst::p1 : TTTPConst::p2);
 	winGame(!playerOne);
 }
 
@@ -215,15 +223,17 @@ void gameSettingsPhase(){
 
 void playMove(){
 	MoveDescriptor desc = getMoveDescriptor(line);
-	//FIXME according to protocol
-	state.playMove(Move(desc));
+	if(!state.playMove(Move(desc))){
+		printErr(TTTPConst::lineInvalidMove);
+		looseGame(state.isPlayerOneTurn());
+	}
 }
 
 /**
  * Handles engine operation line
  */
 void engineOp(){
-	//TODO
+	engineControl.notifyLine(line);
 }
 
 /**
@@ -242,7 +252,7 @@ void printReq(){
  * Sets up the engine with the current line
  */
 void setupEngine(){
-	//TODO
+	engineControl.notifySetup(line);
 }
 
 /**

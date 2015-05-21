@@ -8,13 +8,13 @@
 
 #include <cinttypes>
 
-typedef std::uint_fast16_t FieldBits;
-typedef std::uint_fast8_t BoardBits;
+typedef unsigned short FieldBits;
+typedef unsigned short BoardBits;
 
-inline BoardBits getFieldOfBoard(BoardBits boardID){
+inline FieldBits getFieldOfBoard(BoardBits boardID){
 	return 0x1 << boardID;
 }
 
-inline std::uint_fast8_t getBoardOfField(FieldBits bits){
-	return 8*sizeof(int)-__builtin_clz(bits)-1;
+inline BoardBits getBoardOfField(FieldBits bits){
+	return 32-__builtin_clz(bits)-1;
 }
