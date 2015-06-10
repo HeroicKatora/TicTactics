@@ -47,6 +47,10 @@ struct TicTacBoard{
 		return wonState > 1;
 	}
 
+	const bool isWon(){
+		return wonState > 1;
+	}
+
 	WonState wonState;
 	BoardField setPlayerOne, setPlayerTwo;
 

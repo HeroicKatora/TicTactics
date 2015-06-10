@@ -19,14 +19,24 @@ class MoveHistory;
 struct MoveDescriptor{
 	BoardBits whichBoard;
 	FieldBits whichField;
+	MoveDescriptor(BoardBits board, FieldBits field){
+		whichBoard = board;
+		whichField = field;
+	}
 	bool operator==(MoveDescriptor& comp){
 		return whichBoard == comp.whichBoard && whichField == comp.whichField;
 	}
-	unsigned getBoardIndex(){
+	inline BoardBits getBoard(){
 		return whichBoard;
 	}
+	inline FieldBits getField(){
+		return whichField;
+	}
+	unsigned getBoardIndex(){
+		return getIndexOfBoard(whichBoard);
+	}
 	unsigned getFieldIndex(){
-		return getBoardOfField(whichField);
+		return getIndexOfField(whichField);
 	}
 };
 
@@ -37,7 +47,7 @@ struct Move{
 		prevWonState(0), boardSet(board),
 		fieldSet(field), boardWinOne(0), boardWinTwo(0){}
 	Move(MoveDescriptor description):
-		Move(description.whichBoard, description.whichField){};
+		Move(description.getBoard(), description.getField()){};
 	WonState prevWonState;
 	BoardBits boardSet;
 	FieldBits fieldSet;
@@ -47,19 +57,17 @@ struct Move{
 	inline WonState getPrevWonState(WonState afterMove){
 		return prevWonState;
 	}
-	//0..8, index of board
 	inline BoardBits getBoardSet(){
 		return boardSet;
 	}
-	//0000 000$ $$$$ $$$$ bit set according to the target field
 	inline FieldBits getFieldSet(){
 		return fieldSet;
 	}
-	//0000 000$ $$$$ $$$$ bit set if a board was conquered by P1
+	//Field bits if a board was conquered by P1
 	inline FieldBits getWonBoardPOne(){
 		return boardWinOne;
 	}
-	//0000 000$ $$$$ $$$$ bit set if a board was conquered by P2
+	//Field bits if a board was conquered by P2
 	inline FieldBits getWonBoardPTwo(){
 		return boardWinTwo;
 	}

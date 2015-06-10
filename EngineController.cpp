@@ -6,6 +6,7 @@
  */
 
 #include "EngineController.hpp"
+#include "Input.hpp"
 
 EngineController::EngineController(Searcher& s):controlledSearcher(s) {
 }

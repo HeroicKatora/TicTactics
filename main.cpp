@@ -69,7 +69,7 @@ void waitForLine(std::regex& regex){
 void waitForLine(const char * wait){
 	do{
 		goToNextLine();
-	}while(!strcmp(line, wait));
+	}while(!strcmp(line, wait) && sink());
 }
 
 int main(int argc, char **argv) {

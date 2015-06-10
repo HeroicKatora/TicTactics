@@ -123,7 +123,7 @@ InitResult GameState::checkSingleValidity(MoveDescriptor playerMoves[9]){
 		MoveDescriptor m = playerMoves[i];
 		Move move = Move(m);
 		if(!isValidMove(move)){
-			if(m.whichBoard == 4 && m.whichField == 0x10){
+			if(m.getBoardIndex() == 4 && m.getFieldIndex() == 4){
 				result.type = MIDDLE_MOVE;
 			}else{
 				result.type = INVALID;

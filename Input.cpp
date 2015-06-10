@@ -68,12 +68,13 @@ bool matches(const char *word, std::regex& reg){
 }
 
 MoveDescriptor getMoveDescriptor(const char * source){
-	MoveDescriptor desc{};
-	sscanf(source, "B%1huF%1hu", &desc.whichBoard, &desc.whichField);
-	desc.whichBoard--;
-	desc.whichField--;
-	desc.whichField = 0x1 << desc.whichField;
-	return desc;
+	BoardBits b;
+	BoardBits f;
+	sscanf(source, "B%1huF%1hu", &b, &f);
+	b--;
+	f--;
+	FieldBits field = getFieldOfBoard(f);
+	return MoveDescriptor{b, field};
 }
 
 bool registerDynamicHandler(const char id[], void (*fun)(char *)){
