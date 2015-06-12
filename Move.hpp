@@ -19,6 +19,7 @@ class MoveHistory;
 struct MoveDescriptor{
 	BoardBits whichBoard;
 	FieldBits whichField;
+	MoveDescriptor():whichBoard(-1), whichField(-1){}
 	MoveDescriptor(BoardBits board, FieldBits field){
 		whichBoard = board;
 		whichField = field;

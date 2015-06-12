@@ -47,7 +47,7 @@ Searcher::Searcher(GameState * state):gameState(state), pause(true){
 
 MoveSuggestion Searcher::getBestKnownMove(){
 	SearchNode * m = topNode.children[0];
-	if(!m) return MoveSuggestion{MoveDescriptor{-1,-1},0};
+	if(!m) return MoveSuggestion{MoveDescriptor{},0};
 	return MoveSuggestion{m->move, m->rating};
 }
 

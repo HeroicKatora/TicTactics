@@ -22,6 +22,8 @@ struct MoveSuggestion{
 };
 
 struct SearchNode{ //If rating = +-inf, win of one player,
+	SearchNode(): rating(),weight(), move{}{
+	}
 	//if no child nodes and rating != inf, obviously no children are existent
 	float rating;
 	//Weight of this note, depends on depth and rating
