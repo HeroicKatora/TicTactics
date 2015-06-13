@@ -171,6 +171,7 @@ Multiple formats mean optional possibilities
 	TTTP:Debug			//General debug information, best to log it
 	TTTP:Meta			//Information about the protocol, may have future use like encoding
 	TTTP:Chat			//Chat lines between human players
+	TTTP:Engine			//Informational ouput of engines
 <protocol name>:
 	TTTP v1
 <start game>:
