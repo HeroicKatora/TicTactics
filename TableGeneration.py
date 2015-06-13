@@ -55,13 +55,25 @@ def bewerteBoard(setP1, setP2):
     pop1 = popCount(setP1)
     pop2 = popCount(setP2)
     
+    winP1Bool = False
+    winP2Bool = False
+    
     for mask in winsMasks:
         if (setP1 & mask) == mask:
-            return winP1
+            winP1Bool = True
             
     for mask in winsMasks:
         if (setP2 & mask) == mask:
-            return winP2
+            winP2Bool = True
+    
+    if winP1Bool and winP2Bool:
+        return 0
+    
+    if winP1Bool:
+        return winP1
+    
+    if winP2Bool:
+        return winP2
     
     chancesP1 = 0
     for mask in chancesMasks:
@@ -106,12 +118,17 @@ def popCount(integer):
 file = open("RatingTable.h", 'w')
 file.write("#pragma once\nfloat ratingTable [] = {0\n")
 
+summe = 0
+
 for setPlayerOne in range(2**9):
     for setPlayerTwo in range(2**9):
         if not setPlayerOne and not setPlayerTwo:
             continue
-        file.write(","+str(bewerteBoard(setPlayerOne, setPlayerTwo))+"\n")
-       
+        score = bewerteBoard(setPlayerOne, setPlayerTwo)
+        summe += score
+        file.write(","+str(score)+"\n")
+
+print("Summe aller Scores: " + str(score))
 
 file.write("};\n")
 file.close()
