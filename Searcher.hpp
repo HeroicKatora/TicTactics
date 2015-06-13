@@ -40,11 +40,16 @@ class Searcher{
 
 	void discoverMoves(const GameState * state,SearchNode ** dest);
 
+	void parallelSearch(SearchNode * startNode);
+
 public:
 	Searcher(GameState * state);
 
 	MoveSuggestion getBestKnownMove();
 
+	/**
+	 * Called to spawn parallel searcher threads
+	 */
 	void runParallel();
 
 	void notifyUndo(Move& move);

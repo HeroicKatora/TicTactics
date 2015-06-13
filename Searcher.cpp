@@ -6,6 +6,7 @@
  */
 
 #include "Searcher.hpp"
+#include <thread>
 
 /**
  * Calculates the number n of childs allowed for a node of given weight and depth.
@@ -38,7 +39,7 @@
  * And n = node.weigth * log d
  */
 unsigned getWeightedMaxChildNumber(float weight, unsigned depth){
-
+	return depth * weight;
 }
 
 
