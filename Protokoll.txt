@@ -1,26 +1,71 @@
 TTTP v1
+
+
+
+Index
 [1] Introduction and definitions
-[1.0] Protocol Design
--1) If nothing on stderr, assume all is good
--2) Meta characters in this document are []<>
--3) Escape character in this document is \
--4) As long as line from in stream does not match format, skip line, if not specified otherwise
+	[1.0] Protocol Design Principals
+	[1.1] Protocol interpretation
+	[1.2] Protocol information page
+	[1.3] Identifiers
+[2] Formats
+	[2.1] Primitive and Data Type Formats
+	[2.1] Error formats
+	[2.2] Constants
+	[2.3] Settings
+	[2.4] Print operations
+	[2.5] Engine operations
+	[2.6] Engine specific constants
+[3] Protocol flow
+	[Game]
+	[Settings phase]
+	[Init phase]
+	[Get opening]
+	[Play init]
+	[Turn]
+	[EngineOp]
+	[Play move]
+	[Loose game]
+	[Win game]
+	[PlayerRep]
+	[End game]
+
+
+
+[1] Introduction and definitions
+[1.0] Protocol Design Principals
+
+1) If nothing on stderr, assume all is good
+
+2) Meta characters in this document are []<>
+
+3) Escape character in this document is \
+
+4) As long as line from in stream does not match format, skip line, if not specified otherwise
 It is recommended to output a comment [see 1.0.8)] about it
--5) TTTP is new line based, all data comes in chunks of an integer number of lines
--6) No data chunks on stdout shall interleave, interleaving chunks on stdin produce undefined
+
+5) TTTP is new line based, all data comes in chunks of an integer number of lines
+
+6) No data chunks on stdout shall interleave, interleaving chunks on stdin produce undefined
 behaviour, stderr is not strictly linear
--7) Protocol lines may not be longer than 1000 characters
--8) Output/Input starting with ":" shall be ignored for game flow, information only, until ":\n" is output
+
+7) Protocol lines may not be longer than 1000 characters
+
+8) Output/Input starting with ":" shall be ignored for game flow, information only, until ":\n" is output
 These can also be seen as data to own clients instead of the other client.
--9) Asynchronous Data must have an identifier in the form \[<id>\] in front of it. More
+
+9) Asynchronous Data must have an identifier in the form \[<id>\] in front of it. More
 information about identifiers is found in [1.3], all reserved identifiers are listed under 
 Formats [2.2]. Data with unknown or unexpected identifier can and should be discarded. 
 An error or a warning musn't be produced. Each identifier is said to correspond to a channel.
--10) You are allowed to diverge slightly from this protocol if both communication partners
+
+10) You are allowed to diverge slightly from this protocol if both communication partners
 have considerable proof over each others wish to do so. An example for this could be an
 increased line length for engines with very deep move output.
 
-[1.1] Protocol flow
+
+[1.1] Protocol interpretation
+
 Protocol starts at [Game]
 Terms in <> brackets refer to some format specified in [2]. If found on the right side of an
 equal comparison, it is a test if the left side is of the format (or an equal representation
@@ -32,18 +77,25 @@ A process [<id>:A] << B means that it takes A and produces B (mostly used with f
 A process with id <internalID> is NOT specified in this doc and never will be as it is just
 a there to remind you of logic order of operations. Too nice, I know.
 
-[1.2] Protocol information page
+
+[1.2] Protocol information pag
+
 The main page for discussion/ development information is www.github.com/HeroicKatora/TicTactis
 
+
 [1.3] Identifiers
+
 All identifiers starting with TTTP: are reserved for future use and mustn't be used. Handling
 them in your own engine in some way is highly recommended, a full list of these can be found
 in [2.2]. If the identifiers are engine specific, you should precede them with "<engine name>:"
 to avoid possible conflicts and confusion. (This also discourages ridiculously long engine
 names, implicitly by maximum line length).
 
+
+
 [2] Formats
 [2.1] Primitive and Data Type Formats
+
 Multiple formats mean optional possibilities
 <id>:
 	<identifier constant>
@@ -53,17 +105,17 @@ Multiple formats mean optional possibilities
 	false
 <Move>:
 	B[1..9]F[1..9] //Board index, Field index
-<Field>: One of the following (with their names)
-	VALID = '_';
-	EMPTY = '~';
-	Set1W1 = 'X';
-	Set1WA = 'x';
-	Set3W0	= '%';
-	Set3W1 = '+';
-	Set3W3 = '&';
-	Set3W2 = '0';
-	Set2W2 = 'O';
-	Set2WA = 'o';
+<Field>: One of the following (:with their names)
+	_:VALID //Empty field and the player can set there
+	~:EMPTY //Empty field, but the current player can not play there
+	X:Set1W1 //Player One set on field, Player One won this board
+	x:Set1WA //Player One set on field, Player One did not win this board
+	%:Set3W0 //Both player have this, None has won the board until now
+	+:Set3W1 //Both player have this, Player One won the board
+	&:Set3W3 //Both player have this, it is a tie on the board
+	0:Set3W2 //Both player have this, Player Two won the board
+	O:Set2W2 //Player One set on field, Player Two won this board
+	o:Set2WA //Player One set on field, Player Two did not win this board
 <Row>: 
 	<Field><Field><Field>
 <Board>: 
@@ -73,15 +125,26 @@ Multiple formats mean optional possibilities
 	\n][x2]
 	[<Row> <Row> <Row>][x3]
 <time>:
-	<integer>[m|s|ms]
-	<integer>m<integer>[s|ms]
-	<integer>s<integer>ms
-	<integer>m<integer>s<integer>ms
+	<minutes>
+	<seconds>
+	<milliseconds>
+	<minutes> <seconds>
+	<minutes> <milliseconds>
+	<seconds> <milliseconds>
+	<minutes> <seconds> <milliseconds>
+<minutes>:
+	<unsigned integer>m
+<seconds>:
+	<unsigned integer>s
+<milliseconds>:
+	<unsigned integer>ms
 <player>: There are two players, this does not define how they look in the program
 	[internal:Player One]
 	[internal:Player Two]
 
+
 [2.1] Error formats
+
 <Init error>:
 	Init error <IError code> <IError index> <IError player>
 <IError code>: Both sides of the equal sign are equivalent
@@ -100,8 +163,10 @@ Multiple formats mean optional possibilities
 	<invalid move string>
 <wrong input>:
 	<wrong input string>
-				 
+
+		 
 [2.2] Constants
+
 <identifier constant>:
 	TTTP:Debug			//General debug information, best to log it
 	TTTP:Meta			//Information about the protocol, may have future use like encoding
@@ -134,7 +199,9 @@ Multiple formats mean optional possibilities
 <lost message>:
 	 lost himself the game //Mind the space (kind of normal to have spaces between words)
 
+
 [2.3] Settings
+
 <engine setting>: Engine hints, no must
 <setting>:
 	[EnginePlayer:[P1]|[P2]|[None]]	//default None
@@ -144,7 +211,9 @@ Multiple formats mean optional possibilities
 	[Initial moves:[0..9]]			//Initial moves per player, default 9
 	[Init limit per board:[1..9]]	//How many field of one board you can take during init phase, default 2
 
+
 [2.4] Print operations
+
 <printReq>: 
 	<printFull>
 	<printBoard>
@@ -153,15 +222,21 @@ Multiple formats mean optional possibilities
 <printBoard>: 
 	Print B[1..9]
 	
+
 [2.5] Engine operations
+
 <EngineOp>:
 	go <time> <time> //tells the engine to give asynchronous updates about best moves
 					 //First time is move time, second total time (increment is not to be altered during the game)
 	pause			//Tells the engine to pause calculation, without forcing a "memory loss"
 	stop			//Tells the engine to stop and drop all calculations done
 
+
 [2.6] Engine specific constants
+
 <engine name>: <id> //e.g. "Triple T Madness"
+
+
 
 [3] Protocol flow
 
@@ -174,6 +249,17 @@ Multiple formats mean optional possibilities
 	while([Turn]);
 	[Win game:[winner]]
 
+[Settings phase]:
+	[	phase << stdin
+		if(phase = "<start e settings>\n")
+			["<engine setting>\n" << stdin]x?
+			"<end settings>\n" << stdin
+		else if(phase = "<start g settings>\n")
+			["<setting>\n" << stdin]x?
+			"<end settings>\n" << stdin
+	]x?<1000
+	"<start game>\n" << stdin
+	
 [Init phase]:
 	"<p1 init>\n" << stdin
 	<Move>[] p1M, p2M
@@ -187,10 +273,10 @@ Multiple formats mean optional possibilities
 		[Loose game:[traitor"]]
 	"<start turns>\n" << stdin
 
-[Get Opening: <Move>[] moves]: << <bool>
+[Get opening: <Move>[] moves]: << <bool>
 	in << stdin
 	if(in = <Move>)
-		moves <<+ [init: in]
+		moves <<+ [Play Init: in]
 		[:Internal operation, add initial move]
 	else if(in = <EngineOp>)
 		[EngineOp: in]
@@ -201,16 +287,17 @@ Multiple formats mean optional possibilities
 		<< true
 	<< false
 
-[init: <Move> in]: << <Move>
+[Play init: <Move> in]: << <Move>
 	if(invalid move(m))
 		"<invalid move>\n" >> stderr
 		[Loose game: player]
+	[:Internal operation, play initial move]
 	<< in
 
 [Turn]: << <bool>
 	in << stdin
 	if(in = <Move>)
-		[play: in]
+		[Play move: in]
 	else if(in = <EngineOp>)
 		[EngineOp: in]
 	else if(in = <printReq>)
@@ -225,25 +312,14 @@ Multiple formats mean optional possibilities
 		<< true
 
 [EngineOp: <EngineOp> op]:
-	[interal operations] //For now, nothing more specified, thats bad but I am lazy and you are smart enough to think
+	[:Interal operations] //For now, nothing more specified, thats bad but I am lazy and you are smart enough to think
 
-[play: <Move> m]:
+[Play move: <Move> m]:
 	if(invalid move(m))
 		"<invalid move>\n" >> stderr
 		[Loose game: player]
-	[internal: operation, advances the turn]
+	[:Internal operation, advances the turn]
 
-[Settings phase]:
-	[	phase << stdin
-		if(phase = "<start e settings>\n")
-			["<engine setting>\n" << stdin]x?
-			"<end settings>\n" << stdin
-		else if(phase = "<start g settings>\n")
-			["<setting>\n" << stdin]x?
-			"<end settings>\n" << stdin
-	]x?<1000
-	"<start game>\n" << stdin
-	
 [Loose game:<player> player]:
 	"[PlayerRep:player]<lost message>\n" >> stderr
 	[Win game: !player]
