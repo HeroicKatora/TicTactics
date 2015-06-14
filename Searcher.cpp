@@ -8,6 +8,7 @@
 #include "Searcher.hpp"
 #include <vector>
 #include <cmath>
+#include <thread>
 
 /**
  * Calculates the number n of childs allowed for a node of given weight and depth.

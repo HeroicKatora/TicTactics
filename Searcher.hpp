@@ -22,6 +22,8 @@ struct MoveSuggestion{
 };
 
 struct SearchNode{ //If rating = +-inf, win of one player,
+	SearchNode(): rating(),weight(), move{}{
+	}
 	//if no child nodes and rating != inf, obviously no children are existent
 	float rating;
 	//Weight of this note, depends on depth and rating
@@ -38,11 +40,16 @@ class Searcher{
 
 	size_t discoverMoves(const GameState * state,SearchNode ** dest, size_t maxNumber);
 
+	void parallelSearch(SearchNode * startNode);
+
 public:
 	Searcher(GameState * state);
 
 	MoveSuggestion getBestKnownMove();
 
+	/**
+	 * Called to spawn parallel searcher threads
+	 */
 	void runParallel();
 
 	void notifyUndo(Move& move);

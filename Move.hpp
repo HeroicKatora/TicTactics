@@ -19,7 +19,7 @@ class MoveHistory;
 struct MoveDescriptor{
 	BoardBits whichBoard;
 	FieldBits whichField;
-	MoveDescriptor():MoveDescriptor(-1, -1){}; //No arguments construct an invalid move
+	MoveDescriptor():whichBoard(-1), whichField(-1){}
 	MoveDescriptor(BoardBits board, FieldBits field){
 		whichBoard = board;
 		whichField = field;
