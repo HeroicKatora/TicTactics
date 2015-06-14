@@ -36,7 +36,7 @@ class Searcher{
 	std::atomic<bool> end;
 	SearchNode topNode;
 
-	void discoverMoves(const GameState * state,SearchNode ** dest);
+	size_t discoverMoves(const GameState * state,SearchNode ** dest, size_t maxNumber);
 
 public:
 	Searcher(GameState * state);

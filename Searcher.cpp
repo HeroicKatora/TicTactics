@@ -6,6 +6,8 @@
  */
 
 #include "Searcher.hpp"
+#include <vector>
+#include <cmath>
 
 /**
  * Calculates the number n of childs allowed for a node of given weight and depth.
@@ -38,7 +40,14 @@
  * And n = node.weigth * log d
  */
 unsigned getWeightedMaxChildNumber(float weight, unsigned depth){
-
+	//We use caching since that is O(c), while the function n might not be
+	static std::vector<float> calculationResults {};
+	auto functionN_ = [](unsigned depth){return (float)depth;};
+	unsigned size = calculationResults.size();
+	while(size <= depth){
+		calculationResults.push_back(functionN_(size++));
+	}
+	return weight * calculationResults.at(depth);
 }
 
 
@@ -47,7 +56,7 @@ Searcher::Searcher(GameState * state):gameState(state), pause(true){
 
 MoveSuggestion Searcher::getBestKnownMove(){
 	SearchNode * m = topNode.children[0];
-	if(!m) return MoveSuggestion{MoveDescriptor{-1,-1},0};
+	if(!m) return MoveSuggestion{MoveDescriptor{}, nan("")};
 	return MoveSuggestion{m->move, m->rating};
 }
 
@@ -71,4 +80,11 @@ void Searcher::setPause(bool pause) {
 
 void Searcher::endParallel() {
 	end = true;
+}
+
+/**
+ * Writes all moves that are found into the array (at maximum maxNumber) and returns
+ * how many moves were found, which may indicate the array was too small.
+ */
+size_t Searcher::discoverMoves(const GameState* state, SearchNode** dest, size_t maxNumber) {
 }
