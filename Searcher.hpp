@@ -7,6 +7,7 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
 #include "Move.hpp"
 #include "Rating.hpp"
 
@@ -29,18 +30,19 @@ struct SearchNode{ //If rating = +-inf, win of one player,
 	//Weight of this note, depends on depth and rating
 	float weight;
 	MoveDescriptor move;
-	SearchNode * children [CHILD_COUNT];
+	SearchNode *children [CHILD_COUNT];
 };
 
 class Searcher{
-	GameState const * gameState;
+	const GameState *gameState;
 	std::atomic<bool> pause;
+	std::mutex pauseMutex;
 	std::atomic<bool> end;
 	SearchNode topNode;
 
-	size_t discoverMoves(const GameState * state,SearchNode ** dest, size_t maxNumber);
+	size_t discoverMoves(const GameState *state,SearchNode **dest, size_t maxNumber);
 
-	void parallelSearch(SearchNode * startNode);
+	void parallelSearch(SearchNode *startNode);
 
 public:
 	Searcher(GameState * state);
