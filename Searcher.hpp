@@ -12,7 +12,6 @@
 #include "Rating.hpp"
 
 constexpr unsigned SEARCHER_SIZE = 500000;
-constexpr size_t CHILD_COUNT = 71;
 class GameState;
 
 class Searcher;
@@ -23,14 +22,19 @@ struct MoveSuggestion{
 };
 
 struct SearchNode{ //If rating = +-inf, win of one player,
-	SearchNode(): rating(),weight(), move{}{
+	SearchNode(): rating(),weight(), childCount(0), move{}, children(0){
 	}
 	//if no child nodes and rating != inf, obviously no children are existent
 	float rating;
 	//Weight of this note, depends on depth and rating
 	float weight;
+
+	unsigned childCount;
 	MoveDescriptor move;
-	SearchNode *children [CHILD_COUNT];
+	SearchNode *children;
+
+	void discover(const GameState *);
+	void close();
 };
 
 class Searcher{
@@ -39,8 +43,6 @@ class Searcher{
 	std::mutex pauseMutex;
 	std::atomic<bool> end;
 	SearchNode topNode;
-
-	size_t discoverMoves(const GameState *state,SearchNode **dest, size_t maxNumber);
 
 	void parallelSearch(SearchNode *startNode);
 
@@ -62,3 +64,10 @@ public:
 
 	void endParallel();
 };
+
+/**
+ * Allocates a new array containing the discovered move nodes and stores it to dest.
+ * At maximum maxNumber are stored, the return type is how many were discovered.
+ * Use a max size of -1 to be unbounded
+ */
+size_t discoverMoves(const GameState *state,SearchNode *&dest, size_t maxNumber);
