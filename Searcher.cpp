@@ -102,24 +102,24 @@ void Searcher::endParallel() {
 	end = true;
 }
 
-/**
- * Writes all moves that are found into the array (at maximum maxNumber) and returns
- * how many moves were found, which may indicate the array was too small.
- */
-size_t Searcher::discoverMoves(const GameState *state, SearchNode **dest, size_t maxNumber) {
+size_t Searcher::discoverMoves(const GameState *state, SearchNode *&dest, size_t maxNumber) {
 }
 
 void Searcher::parallelSearch(SearchNode * startNode){
 	if(!startNode)
 		return;
+	struct SearchPathNode{
+		SearchNode *node;
+		unsigned childIndex;
+	};
 	std::deque<SearchNode *> nodePath{30};
+	SearchNode *currentNode = startNode;
 	while(!end){
+
 		//Expand this node
-		SearchNode *currentNode = startNode;
-		if(!currentNode->children[0]){
-			size_t discovered = discoverMoves(this->gameState, currentNode->children, CHILD_COUNT);
-		}
+		currentNode->discover(gameState);
 		//Search code
+
 
 		//Makes the thread pause until pauseMutex is available
 		if(!end){
@@ -127,4 +127,15 @@ void Searcher::parallelSearch(SearchNode * startNode){
 			pauseMutex.unlock();
 		}
 	}
+}
+
+void SearchNode::discover(const GameState *state){
+	if(!children){
+		childCount = discoverMoves(state, children, -1);
+	}
+}
+
+void SearchNode::close(){
+	free(children);
+	childCount = 0;
 }
