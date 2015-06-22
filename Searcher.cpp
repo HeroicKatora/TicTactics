@@ -109,24 +109,50 @@ size_t discoverMoves(const GameState *state, SearchNode *&dest, size_t maxNumber
 void Searcher::parallelSearch(SearchNode * startNode){
 	if(!startNode)
 		return;
+
 	struct SearchPathNode{
 		SearchNode *node;
 		unsigned childIndex;
 	};
 
+	unsigned maxDepth, depth;
 	std::deque<SearchPathNode> nodePath{30};
-	SearchNode *currentNode = startNode;
-	while(!end){
+	SearchPathNode current{startNode, 0};
+	bool load = false;
+	for(;!end;maxDepth++){
+		depth = 0;
+		while(!end){
+			if(load){
+				if(nodePath.size()){
+					current = nodePath.pop_front();
+					load = false;
+				}else{
+					//We searched all nodes, end this cycle
+					break;
+				}
+			}
+			if(depth == maxDepth){
 
-		//Expand this node
-		currentNode->discover(gameState);
-		//Search code
+			}
+			//Expand this node
+			current.node->discover(gameState);
+			//Search code
+			if(current.childIndex == current.node->childCount){
+
+			}else{
+				SearchPathNode next = {current.node->children[current.childIndex], 0};
+				current.childIndex++;
+				nodePath.push_front(current);
+				current = next;
+				depth++;
+			}
 
 
-		//Makes the thread pause until pauseMutex is available
-		if(!end){
-			pauseMutex.lock();
-			pauseMutex.unlock();
+			//Makes the thread pause until pauseMutex is available
+			if(!end){
+				pauseMutex.lock();
+				pauseMutex.unlock();
+			}
 		}
 	}
 }
@@ -140,4 +166,8 @@ void SearchNode::discover(const GameState *state){
 void SearchNode::close(){
 	free(children);
 	childCount = 0;
+}
+
+void SearchNode::reorderChildren(){
+
 }

@@ -26,15 +26,25 @@ struct SearchNode{ //If rating = +-inf, win of one player,
 	}
 	//if no child nodes and rating != inf, obviously no children are existent
 	float rating;
-	//Weight of this note, depends on depth and rating
+	//Weight of this note, depends on depth and rating relative to others
 	float weight;
 
 	unsigned childCount;
 	MoveDescriptor move;
 	SearchNode *children;
 
+	/**
+	 * Discovers all possible moves for this node
+	 */
 	void discover(const GameState *);
+	/**
+	 * Frees all children for this node
+	 */
 	void close();
+	/**
+	 * Reorders the child nodes so that the most valuable is at index 0
+	 */
+	void reorderChildren();
 };
 
 class Searcher{
