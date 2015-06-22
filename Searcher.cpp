@@ -63,7 +63,7 @@ Searcher::Searcher(GameState * state):gameState(state), pause(true){
 }
 
 MoveSuggestion Searcher::getBestKnownMove(){
-	SearchNode * m = topNode.children[0];
+	SearchNode * m = topNode.children;
 	if(!m) return MoveSuggestion{MoveDescriptor{}, nan("")};
 	return MoveSuggestion{m->move, m->rating};
 }
@@ -102,7 +102,8 @@ void Searcher::endParallel() {
 	end = true;
 }
 
-size_t Searcher::discoverMoves(const GameState *state, SearchNode *&dest, size_t maxNumber) {
+
+size_t discoverMoves(const GameState *state, SearchNode *&dest, size_t maxNumber) {
 }
 
 void Searcher::parallelSearch(SearchNode * startNode){
@@ -112,7 +113,8 @@ void Searcher::parallelSearch(SearchNode * startNode){
 		SearchNode *node;
 		unsigned childIndex;
 	};
-	std::deque<SearchNode *> nodePath{30};
+
+	std::deque<SearchPathNode> nodePath{30};
 	SearchNode *currentNode = startNode;
 	while(!end){
 
