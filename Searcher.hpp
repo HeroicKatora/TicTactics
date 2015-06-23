@@ -43,8 +43,13 @@ struct SearchNode{ //If rating = +-inf, win of one player,
 	/**
 	 * Reorders the child nodes so that the most valuable is at index 0
 	 * If playerOne, max the rating, else minimize it
+	 * Then it sets its rating to the maximum
 	 */
-	void reorderChildren(bool playerOne);
+	void revalueChildren(bool playerOne);
+	/**
+	 * Only sets the rating to the maximum in its children
+	 */
+	void setToMaxChild(bool playerOne);
 };
 
 class Searcher{

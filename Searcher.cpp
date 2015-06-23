@@ -13,6 +13,7 @@
 #include <cmath>
 #include <thread>
 #include <chrono>
+#include <algorithm>
 #include <functional>
 
 /**
@@ -156,11 +157,17 @@ void Searcher::parallelSearch(SearchNode * startNode){
 				//Expand this node
 				current.node->discover(gameState);
 			}
+			if(depth == maxDepth-1){
+				//The children were not sorted in the previous run, so reorder them
+				current.node->revalueChildren(searchState.isPlayerOneTurn());
+			}
 
 			//Search code
-			if(current.childIndex == current.node->childCount||
-					depth == maxDepth){
-				current.node->reorderChildren(searchState.isPlayerOneTurn());
+			if(depth == maxDepth){
+				current.node->setToMaxChild(searchState.isPlayerOneTurn());
+				load = true;
+			}else if(current.childIndex == current.node->childCount){
+				current.node->revalueChildren(searchState.isPlayerOneTurn());
 				load = true;
 			}else{
 				SearchPathNode next = {&current.node->children[current.childIndex], 0};
@@ -190,6 +197,24 @@ void SearchNode::close(){
 	childCount = 0;
 }
 
-void SearchNode::reorderChildren(bool playerOne){
+bool isTwoBetterThan(float one, float two, bool playerOne){
+	if(playerOne) return one < two;
+	else return one > two;
+}
 
+bool isTwoBetterThanNode(SearchNode& one, SearchNode& two, bool playerOne){
+	return isTwoBetterThan(one.rating, two.rating, playerOne);
+}
+
+void SearchNode::revalueChildren(bool playerOne){
+	if(!children) return;
+	//Sort children
+	std::sort_heap(children, children+childCount-1, std::bind(isTwoBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
+	rating = children[0].rating;
+}
+
+void SearchNode::setToMaxChild(bool playerOne){
+	for(unsigned int i = 0;i<childCount;i++){
+		rating = isTwoBetterThan(rating, children[i].rating, playerOne)?children[i].rating:rating;
+	}
 }
