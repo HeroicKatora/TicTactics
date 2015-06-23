@@ -14,22 +14,22 @@
 struct BoardField{
 
 	BoardField();
-	BoardField(FieldBits bits);
+	BoardField(const FieldBits bits);
 
 	FieldBits bitsUsed;
 
-	BoardField operator &(const BoardField& other);
-	BoardField operator |(const BoardField& other);
-	bool operator==(const BoardField& other);
+	BoardField operator &(const BoardField& other) const;
+	BoardField operator |(const BoardField& other) const;
+	bool operator==(const BoardField& other) const;
 
-	explicit operator FieldBits(){
+	explicit operator FieldBits() const{
 		return (FieldBits) bitsUsed;
 	};
 	/**
 	 * Gets if the cell with the index is ticked.
 	 * Probably don't use this often if you want to tune for performance
 	 */
-	bool getStateOfCell(unsigned index);
+	bool getStateOfCell(unsigned index) const;
 };
 
 /**
@@ -47,15 +47,15 @@ struct TicTacBoard{
 		return wonState > 1;
 	}
 
-	const bool isWon(){
+	bool isWon() const{
 		return wonState > 1;
 	}
 
 	WonState wonState;
 	BoardField setPlayerOne, setPlayerTwo;
 
-	bool hasPlayerOneWon();
-	bool hasPlayerTwoWon();
+	bool hasPlayerOneWon() const;
+	bool hasPlayerTwoWon() const;
 
 	void applyMove(bool playerOne, FieldBits field);
 };

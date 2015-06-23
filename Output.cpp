@@ -75,7 +75,7 @@ int sprintMove(char* dest, MoveDescriptor& descriptor) {
 	return sprintf(dest, "B%uF%u", descriptor.getBoardIndex(), descriptor.getFieldIndex());
 }
 
-int sprintRow(char * dest,TicTacBoard& board, int row, GameState * surrGame, int boarInd){
+int sprintRow(char * dest,const TicTacBoard& board, int row, const GameState * surrGame, int boarInd){
 	int off = 0;
 	bool p1 = board.hasPlayerOneWon(), p2 = board.hasPlayerTwoWon();
 	for(int j = 0;j<3;j++){
@@ -113,44 +113,44 @@ int sprintRow(char * dest,TicTacBoard& board, int row, GameState * surrGame, int
 	return off;
 }
 
-int printRow(TicTacBoard& board, int row, GameState * surrGame, int boarInd){
+int printRow(const TicTacBoard& board, int row, const GameState * surrGame, int boarInd){
 	char mv [10];
 	int ret = sprintRow(mv, board, row, surrGame, boarInd);
 	printOut(mv);
 	return ret;
 }
 
-int printRow(TicTacBoard& board, int row){
+int printRow(const TicTacBoard& board, int row){
 	return printRow(board, row, NULL, 0);
 }
 
-int printBoard(TicTacBoard& board){
+int printBoard(const TicTacBoard& board){
 	return printBoard(board);
 }
 
-int printBoard(TicTacBoard& board, GameState * game, int index) {
+int printBoard(const TicTacBoard& board, const GameState * game, int index) {
 	char mv [15];
 	int ret = sprintBoard(mv, board, game, index);
 	printOut(mv);
 	return ret;
 }
 
-int printBigBoard(TacTicBoard& board){
+int printBigBoard(const TacTicBoard& board){
 	return printBigBoard(board, NULL);
 }
 
-int printBigBoard(TacTicBoard& board, GameState * surrGame) {
+int printBigBoard(const TacTicBoard& board, const GameState * surrGame) {
 	char mv [155];
 	int ret = sprintBigBoard(mv, board, surrGame);
 	printOut(mv);
 	return ret;
 }
 
-int sprintBoard(char* dest, TicTacBoard& board){
+int sprintBoard(char* dest, const TicTacBoard& board){
 	return sprintBoard(dest, board, NULL, 0);
 }
 
-int sprintBoard(char* dest, TicTacBoard& board, GameState * surrGame, int index) {
+int sprintBoard(char* dest, const TicTacBoard& board, const GameState * surrGame, int index) {
 	int off = 0;
 	for(int i = 0;i<3;i++){
 		off += sprintRow(dest+off,board, i, surrGame, index);
@@ -159,11 +159,11 @@ int sprintBoard(char* dest, TicTacBoard& board, GameState * surrGame, int index)
 	return off;
 }
 
-int sprintBigBoard(char* dest, TacTicBoard& board){
+int sprintBigBoard(char* dest, const TacTicBoard& board){
 	return sprintBigBoard(dest, board, NULL);
 }
 
-int sprintBigBoard(char* dest, TacTicBoard& board, GameState * surrGame) {
+int sprintBigBoard(char* dest, const TacTicBoard& board, const GameState * surrGame) {
 	int off = 0;
 	for(int i = 0;i<3;i++){
 		for(int j = 0;j<3;j++){

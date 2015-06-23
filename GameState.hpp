@@ -74,7 +74,7 @@ public:
 	/**
 	 * Checks if a move is valid
 	 */
-	bool isValidMove(Move& m);
+	bool isValidMove(Move& m) const;
 
 	/**
 	 * Initializes the board with the first 9 moves of each player
@@ -84,29 +84,29 @@ public:
 	/**
 	 * True if a player has won the game
 	 */
-	bool isWon();
+	bool isWon() const;
 
 	/**
 	 * Checks if a specific player has won the game
 	 */
-	bool hasWon(bool playerOne);
+	bool hasWon(bool playerOne) const;
 
 	/**
 	 * True if player one is to play, false if player two
 	 */
-	bool isPlayerOneTurn();
+	bool isPlayerOneTurn() const;
 
 	/**
 	 * Prints the full game board
 	 */
-	int print();
-	int sprint(char *);
+	int print() const;
+	int sprint(char *) const;
 
 	/**
 	 * Prints a single board, but with the surrounding game
 	 */
-	int print(int index);
-	int sprint(int index, char *);
+	int print(int index) const;
+	int sprint(int index, char *) const;
 	/**
 	 * Ends setup phase and starts the game as it is initialized
 	 */
@@ -115,5 +115,5 @@ public:
 	/**
 	 * Returns a pointer to the searcher if there is one
 	 */
-	Searcher* getSearcher();
+	Searcher* getSearcher() const;
 };

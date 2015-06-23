@@ -106,8 +106,21 @@ void Searcher::endParallel() {
 	end = true;
 }
 
+size_t countPossibleMoves(const GameState* state, MoveDescriptor& oldMove){
+	if(state->isWon()) return 0;
+	//TODO count moves
+}
 
-size_t discoverMoves(const GameState *state, SearchNode *&dest, size_t maxNumber) {
+size_t discoverMoves(const GameState *state, SearchNode *&dest, MoveDescriptor& oldMove, size_t maxNumber) {
+	size_t count = countPossibleMoves(state, oldMove);
+	if(count == 0){
+		dest = NULL;
+		return 0;
+	}
+	dest = (SearchNode*) calloc(count, sizeof(SearchNode));
+	if(0 > maxNumber) maxNumber = count;
+	//TODO Fill search nodes
+	return count;
 }
 
 void Searcher::parallelSearch(SearchNode * startNode){
@@ -120,7 +133,7 @@ void Searcher::parallelSearch(SearchNode * startNode){
 		unsigned childIndex;
 	};
 
-	unsigned maxDepth, depth;
+	unsigned maxDepth = 1, depth;
 	std::stack<SearchPathNode> nodePath{};
 	SearchPathNode current{startNode, 0};
 	auto out = [&](unsigned retain){
@@ -153,18 +166,15 @@ void Searcher::parallelSearch(SearchNode * startNode){
 					break;
 				}
 			}
-			if(depth <= maxDepth){
+			if(depth < maxDepth){
 				//Expand this node
 				current.node->discover(gameState);
 			}
-			if(depth == maxDepth-1){
-				//The children were not sorted in the previous run, so reorder them
-				current.node->revalueChildren(searchState.isPlayerOneTurn());
-			}
 
 			//Search code
+
 			if(depth == maxDepth){
-				current.node->setToMaxChild(searchState.isPlayerOneTurn());
+				current.node->rating = rate(searchState);
 				load = true;
 			}else if(current.childIndex == current.node->childCount){
 				current.node->revalueChildren(searchState.isPlayerOneTurn());
@@ -188,7 +198,7 @@ void Searcher::parallelSearch(SearchNode * startNode){
 
 void SearchNode::discover(const GameState *state){
 	if(!children){
-		childCount = discoverMoves(state, children, -1);
+		childCount = discoverMoves(state, children, move, -1);
 	}
 }
 
@@ -208,7 +218,6 @@ bool isTwoBetterThanNode(SearchNode& one, SearchNode& two, bool playerOne){
 
 void SearchNode::revalueChildren(bool playerOne){
 	if(!children) return;
-	//Sort children
 	std::sort_heap(children, children+childCount-1, std::bind(isTwoBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
 	rating = children[0].rating;
 }

@@ -26,17 +26,17 @@ int printMove(MoveDescriptor&);
 int sprintMove(char *, Move&);
 int sprintMove(char *, MoveDescriptor&);
 
-int printBoard(TicTacBoard&);
+int printBoard(const TicTacBoard&);
 /**
  * Print the board assuming it is on the index given of the game
  */
-int printBoard(TicTacBoard&, GameState *, int index);
+int printBoard(const TicTacBoard&, const GameState *, int index);
 
-int printBigBoard(TacTicBoard&);
-int printBigBoard(TacTicBoard&, GameState *);
+int printBigBoard(const TacTicBoard&);
+int printBigBoard(const TacTicBoard&, const GameState *);
 
-int sprintBoard(char *, TicTacBoard&);
-int sprintBoard(char *, TicTacBoard&, GameState *, int index);
+int sprintBoard(char *, const TicTacBoard&);
+int sprintBoard(char *, const TicTacBoard&, const GameState *, int index);
 
-int sprintBigBoard(char *, TacTicBoard&);
-int sprintBigBoard(char *, TacTicBoard&, GameState *);
+int sprintBigBoard(char *, const TacTicBoard&);
+int sprintBigBoard(char *, const TacTicBoard&, const GameState *);

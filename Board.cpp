@@ -13,15 +13,15 @@ const BoardField Fields::winBoards [] =
 const BoardField Fields::fullBoard = BoardField(0x1FF);
 
 
-BoardField::BoardField(FieldBits bits):bitsUsed(bits){
+BoardField::BoardField(const FieldBits bits):bitsUsed(bits){
 }
 
-bool BoardField::getStateOfCell(unsigned index) {
+bool BoardField::getStateOfCell(unsigned index) const {
 	if(index > 8) return false;
 	return (0x1<<index)&bitsUsed;
 }
 
-bool TicTacBoard::hasPlayerOneWon() {
+bool TicTacBoard::hasPlayerOneWon() const {
 	if(wonState & WONP1) return true;
 	if(wonState == ONLYBOTH) return false;
 	for(int i = 0;i<8;i++){
@@ -30,7 +30,7 @@ bool TicTacBoard::hasPlayerOneWon() {
 	return false;
 }
 
-bool TicTacBoard::hasPlayerTwoWon() {
+bool TicTacBoard::hasPlayerTwoWon() const{
 	if(wonState & WONP2) return true;
 	if(wonState == ONLYBOTH) return false;
 	for(int i = 0;i<8;i++){
@@ -49,15 +49,15 @@ void TicTacBoard::applyMove(bool playerOne, FieldBits field) {
 	}
 }
 
-BoardField BoardField::operator &(const BoardField& other) {
+BoardField BoardField::operator &(const BoardField& other) const {
 	return BoardField(bitsUsed&other.bitsUsed);
 }
 
-BoardField BoardField::operator |(const BoardField& other) {
+BoardField BoardField::operator |(const BoardField& other) const {
 	return BoardField(bitsUsed|other.bitsUsed);
 }
 
-bool BoardField::operator ==(const BoardField& other) {
+bool BoardField::operator ==(const BoardField& other) const {
 	return bitsUsed == other.bitsUsed;
 }
 

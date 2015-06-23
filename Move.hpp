@@ -55,21 +55,21 @@ struct Move{
 	FieldBits boardWinOne;
 	FieldBits boardWinTwo;
 	//Previous win state of the board
-	inline WonState getPrevWonState(WonState afterMove){
+	inline WonState getPrevWonState(WonState afterMove) const{
 		return prevWonState;
 	}
-	inline BoardBits getBoardSet(){
+	inline BoardBits getBoardSet() const{
 		return boardSet;
 	}
-	inline FieldBits getFieldSet(){
+	inline FieldBits getFieldSet() const{
 		return fieldSet;
 	}
 	//Field bits if a board was conquered by P1
-	inline FieldBits getWonBoardPOne(){
+	inline FieldBits getWonBoardPOne() const{
 		return boardWinOne;
 	}
 	//Field bits if a board was conquered by P2
-	inline FieldBits getWonBoardPTwo(){
+	inline FieldBits getWonBoardPTwo() const{
 		return boardWinTwo;
 	}
 };

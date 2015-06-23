@@ -61,7 +61,7 @@ void GameState::undoMove() {
 	history.pop();
 }
 
-bool GameState::isValidMove(Move& m) {
+bool GameState::isValidMove(Move& m) const {
 	//Trivial invalid
 	BoardBits boardB = m.getBoardSet();
 	FieldBits fieldB = m.getFieldSet();
@@ -71,13 +71,13 @@ bool GameState::isValidMove(Move& m) {
 
 	//More complex invalid
 	bool valid = true;
-	BoardBits setInTarget = ((BoardBits)board.components[boardB].setPlayerOne) |
-			((BoardBits) board.components[boardB].setPlayerTwo);
+	FieldBits setInTarget = ((const FieldBits)board.components[boardB].setPlayerOne) |
+			((const FieldBits) board.components[boardB].setPlayerTwo);
 	valid &= ((fieldB & setInTarget) == 0);  //Is not on top of a set field
 	if(history.empty()){
 		valid &= boardB != 4 || fieldB != 0x10; //not the mid mid field
 	}else{
-		Move& previousMove = history.top();
+		const Move& previousMove = history.top();
 		FieldBits backMove = getFieldOfBoard(previousMove.getBoardSet());
 		valid &= fieldB != backMove; //Don't make back move
 		if((setInTarget | backMove) < 0x1FF){
@@ -88,16 +88,16 @@ bool GameState::isValidMove(Move& m) {
 	return valid;
 }
 
-bool GameState::isWon(){
+bool GameState::isWon() const{
 	return board.isWon(board.wonState);
 }
 
-bool GameState::hasWon(bool playerOne){
+bool GameState::hasWon(bool playerOne) const{
 	if(playerOne) return board.hasPlayerOneWon();
 	else return board.hasPlayerTwoWon();
 }
 
-bool GameState::isPlayerOneTurn(){
+bool GameState::isPlayerOneTurn()const{
 	return playerOneTurn;
 }
 
@@ -180,25 +180,25 @@ InitResult GameState::initializeWithMoves(MoveDescriptor playerOne[9], MoveDescr
 	return result;
 }
 
-int GameState::print(){
+int GameState::print() const{
 	return printBigBoard(board, this);
 }
 
-int GameState::sprint(char * dest){
+int GameState::sprint(char * dest) const{
 	return sprintBigBoard(dest, board, this);
 }
 
-int GameState::print(int index){
+int GameState::print(int index) const{
 	return printBoard(board.components[index], this, index);
 }
 
-int GameState::sprint(int index, char * dest){
+int GameState::sprint(int index, char * dest) const{
 	return sprintBoard(dest, board.components[index], this, index);
 }
 
 void GameState::start() {
 }
 
-Searcher* GameState::getSearcher() {
+Searcher* GameState::getSearcher() const{
 	return searcher;
 }
