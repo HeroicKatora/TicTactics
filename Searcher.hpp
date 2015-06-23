@@ -6,15 +6,14 @@
  */
 #pragma once
 
+class Searcher;
+
 #include <atomic>
 #include <mutex>
 #include "Move.hpp"
 #include "Rating.hpp"
 
 constexpr unsigned SEARCHER_SIZE = 500000;
-class GameState;
-
-class Searcher;
 
 struct MoveSuggestion{
 	MoveDescriptor move;
@@ -43,8 +42,9 @@ struct SearchNode{ //If rating = +-inf, win of one player,
 	void close();
 	/**
 	 * Reorders the child nodes so that the most valuable is at index 0
+	 * If playerOne, max the rating, else minimize it
 	 */
-	void reorderChildren();
+	void reorderChildren(bool playerOne);
 };
 
 class Searcher{

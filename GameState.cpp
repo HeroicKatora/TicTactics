@@ -41,7 +41,8 @@ void GameState::undoMove(Move& m){
 bool GameState::playMove(Move m) {
 	if(isValidMove(m)){
 		applyAndChangeMove(m);
-		searcher.notifyMoveMade(m);
+		if(searcher)
+			searcher->notifyMoveMade(m);
 		history.push(m);
 		return true;
 	}else{
@@ -55,12 +56,9 @@ bool GameState::playMove(Move m) {
 void GameState::undoMove() {
 	Move m = history.top();
 	undoMove(m);
-	searcher.notifyUndo(m);
+	if(searcher)
+		searcher->notifyUndo(m);
 	history.pop();
-}
-
-MoveSuggestion GameState::getBestKnownMove() {
-	return searcher.getBestKnownMove();
 }
 
 bool GameState::isValidMove(Move& m) {
@@ -201,6 +199,6 @@ int GameState::sprint(int index, char * dest){
 void GameState::start() {
 }
 
-Searcher& GameState::getSearcher() {
+Searcher* GameState::getSearcher() {
 	return searcher;
 }

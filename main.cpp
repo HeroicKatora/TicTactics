@@ -14,7 +14,8 @@
 #include <string>
 
 GameState state{};
-EngineController engineControl{state.getSearcher()};
+Searcher searcher{&state};
+EngineController engineControl{searcher};
 
 /**
  * Looses the game for a player (from his fault)

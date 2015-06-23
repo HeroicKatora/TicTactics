@@ -34,7 +34,7 @@ class GameState{
 	friend float rate(GameState&);
 	TacTicBoard board;
 	MoveHistory history;
-	Searcher searcher;
+	Searcher * searcher;
 	bool playerOneTurn;
 	bool inSetup;
 
@@ -57,8 +57,9 @@ public:
 	/**
 	 * Constructs a game that is in setup phase
 	 */
-	GameState():board(), history(), searcher(this), playerOneTurn(true), inSetup(true){}
-
+	GameState():board(), history(), searcher(0), playerOneTurn(true), inSetup(true){}
+	GameState(GameState&) = default;
+	GameState(const GameState&) = default;
 	/**
 	 * Checks if a move is valid and then plays it.
 	 * Return is if the move was valid
@@ -69,12 +70,6 @@ public:
 	 * Undo the last played move
 	 */
 	void undoMove();
-
-	/**
-	 * Get the move that would be optimal for the current player
-	 * (Limited to the knowledge of the engine)
-	 */
-	MoveSuggestion getBestKnownMove();
 
 	/**
 	 * Checks if a move is valid
@@ -118,7 +113,7 @@ public:
 	void start();
 
 	/**
-	 * Returns a reference to the searcher
+	 * Returns a pointer to the searcher if there is one
 	 */
-	Searcher& getSearcher();
+	Searcher* getSearcher();
 };

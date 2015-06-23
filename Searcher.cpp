@@ -6,6 +6,7 @@
  */
 
 #include "Searcher.hpp"
+#include "GameState.hpp"
 #include <stack>
 #include <vector>
 
@@ -60,6 +61,8 @@ unsigned getWeightedMaxChildNumber(float weight, unsigned depth){
 }
 
 Searcher::Searcher(GameState * state):gameState(state), pause(true){
+	if(state->searcher) throw std::exception();
+	state->searcher = this;
 }
 
 MoveSuggestion Searcher::getBestKnownMove(){
@@ -110,41 +113,59 @@ void Searcher::parallelSearch(SearchNode * startNode){
 	if(!startNode)
 		return;
 
+	GameState searchState = *gameState;
 	struct SearchPathNode{
 		SearchNode *node;
 		unsigned childIndex;
 	};
 
 	unsigned maxDepth, depth;
-	std::deque<SearchPathNode> nodePath{30};
+	std::stack<SearchPathNode> nodePath{};
 	SearchPathNode current{startNode, 0};
+	auto out = [&](unsigned retain){
+		if(nodePath.size()){
+			for(unsigned i = retain;i<current.node->childCount;i++){
+				current.node->children[i].close();
+			}
+			Move m {current.node->move};
+			searchState.undoMove(m);
+			current = nodePath.top();
+			nodePath.pop();
+			return false;
+		}else{
+			return true;
+		}
+	};
+	auto in = [&](SearchPathNode& newNode){
+		Move m {newNode.node->move};
+		searchState.applyAndChangeMove(m);
+		nodePath.push(current);
+		current = newNode;
+		depth++;
+	};
 	bool load = false;
 	for(;!end;maxDepth++){
 		depth = 0;
 		while(!end){
 			if(load){
-				if(nodePath.size()){
-					current = nodePath.pop_front();
-					load = false;
-				}else{
-					//We searched all nodes, end this cycle
+				if(out(getWeightedMaxChildNumber(current.node->weight, depth))){
 					break;
 				}
 			}
-			if(depth == maxDepth){
-
+			if(depth <= maxDepth){
+				//Expand this node
+				current.node->discover(gameState);
 			}
-			//Expand this node
-			current.node->discover(gameState);
-			//Search code
-			if(current.childIndex == current.node->childCount){
 
+			//Search code
+			if(current.childIndex == current.node->childCount||
+					depth == maxDepth){
+				current.node->reorderChildren(searchState.isPlayerOneTurn());
+				load = true;
 			}else{
-				SearchPathNode next = {current.node->children[current.childIndex], 0};
+				SearchPathNode next = {&current.node->children[current.childIndex], 0};
 				current.childIndex++;
-				nodePath.push_front(current);
-				current = next;
-				depth++;
+				in(next);
 			}
 
 
@@ -154,6 +175,7 @@ void Searcher::parallelSearch(SearchNode * startNode){
 				pauseMutex.unlock();
 			}
 		}
+		current.childIndex = 0;
 	}
 }
 
@@ -168,6 +190,6 @@ void SearchNode::close(){
 	childCount = 0;
 }
 
-void SearchNode::reorderChildren(){
+void SearchNode::reorderChildren(bool playerOne){
 
 }
