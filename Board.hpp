@@ -72,6 +72,8 @@ struct TacTicBoard:TicTacBoard{
 	}
 };
 
+bool isWinBoard(BoardField field);
+
 struct Fields{
 	static const BoardField winBoards [9];
 	static const BoardField fullBoard;
