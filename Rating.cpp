@@ -10,12 +10,14 @@
 
 float RATING_P1_WON = 5;
 float RATING_P2_WON = -5;
+float RATING_P1_GAME = 2^16;
+float RATING_P2_GAME = -2^16;
 
-float rate(GameState& state){
+float rate(const GameState& state){
 	return rate(state.board);
 }
 
-float rate(TicTacBoard& board){
+float rate(const TicTacBoard& board){
 	if(board.isWon()){
 		bool p1 = board.hasPlayerOneWon() && !board.hasPlayerTwoWon();
 		bool p2 = board.hasPlayerTwoWon() && !board.hasPlayerOneWon();
@@ -27,11 +29,18 @@ float rate(TicTacBoard& board){
 	return ratingTable[index];
 }
 
-float rate(TacTicBoard& board){
+float rate(const TacTicBoard& board){
+	if(board.isWon()){
+		bool p1 = board.hasPlayerOneWon() && !board.hasPlayerTwoWon();
+		bool p2 = board.hasPlayerTwoWon() && !board.hasPlayerOneWon();
+		if(p1) return RATING_P1_GAME;
+		if(p2) return RATING_P2_GAME;
+		return 0;
+	}
 	float sum = 0;
 	for(int i = 0;i<9;i++){
 		sum += rate(board.components[i]);
 	}
-	sum += rate(static_cast<TicTacBoard&>(board));
+	sum += rate(static_cast<const TicTacBoard&>(board));
 	return sum;
 }

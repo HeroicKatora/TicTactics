@@ -31,10 +31,10 @@ struct InitResult{
 
 class GameState{
 	friend Searcher;
-	friend float rate(GameState&);
+	friend float rate(const GameState&);
 	TacTicBoard board;
 	MoveHistory history;
-	Searcher * searcher;
+	mutable Searcher * searcher;
 	bool playerOneTurn;
 	bool inSetup;
 

@@ -18,7 +18,7 @@ inline FieldBits getFieldOfBoard(const BoardBits boardID){
 }
 
 inline BoardBits getBoardOfField(const FieldBits bits){
-	return 32-__builtin_clz(bits)-1;
+	return __builtin_ffs(bits)-1;
 }
 
 inline unsigned getIndexOfField(const FieldBits bits){

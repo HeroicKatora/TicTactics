@@ -24,20 +24,23 @@ struct MoveDescriptor{
 		whichBoard = board;
 		whichField = field;
 	}
-	bool operator==(MoveDescriptor& comp){
+	bool operator==(MoveDescriptor& comp) const{
 		return whichBoard == comp.whichBoard && whichField == comp.whichField;
 	}
-	inline BoardBits getBoard(){
+	inline BoardBits getBoard() const{
 		return whichBoard;
 	}
-	inline FieldBits getField(){
+	inline FieldBits getField() const{
 		return whichField;
 	}
-	unsigned getBoardIndex(){
+	unsigned getBoardIndex() const{
 		return getIndexOfBoard(whichBoard);
 	}
-	unsigned getFieldIndex(){
+	unsigned getFieldIndex() const{
 		return getIndexOfField(whichField);
+	}
+	bool isInvalidDefault() const{
+		return whichBoard == -1 && whichField == -1;
 	}
 };
 

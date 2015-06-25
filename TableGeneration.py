@@ -107,7 +107,7 @@ def bewerteBoard(setP1, setP2):
     
     if p1mid:
         ret += mid_bonus
-    elif p2mid:
+    if p2mid:
         ret -= mid_bonus
     
     return min(max(ret, -3), 3)
@@ -128,7 +128,32 @@ for setPlayerOne in range(2**9):
         summe += score
         file.write(","+str(score)+"\n")
 
-print("Summe aller Scores: " + str(score))
+print("Summe aller Scores: " + str(summe))
 
 file.write("};\n")
 file.close()
+# Generate win moves table
+file = open("WinMoveTable.h", 'w')
+file.write("//This file is used to look up which moves could win a board in a certain situation\n")
+file.write("//Winning moves are moves, after which the player has a tic tac toe\n")
+file.write("//Therefore this does not check if the tic tac toe existed before (subject to change)")
+file.write("#include \"types.hpp\"\nFieldBits winMoveTable [] = {0\n")
+
+for set in range(2**9):
+	if not set:
+		continue
+	moves = 0
+	for tryMove in [1,2,4,8,16,32,64,128,256]:
+		if set & tryMove:
+			continue
+		winMove = False
+		for win in winsMasks:
+			if ((set|tryMove)&win) == win:
+				winMove = True
+				break
+		if winMove:
+			moves += tryMove
+	file.write(","+str(moves)+"\n")
+
+file.write("} __attribute__((hot));\n")
+file.close();

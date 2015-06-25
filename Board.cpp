@@ -5,6 +5,7 @@
  *      Author: Andreas Molzer
  */
 #include "Board.hpp"
+#include "WinMoveTable.h"
 
 const BoardField Fields::winBoards [] =
 		{BoardField(0x7u), BoardField(0x38u), BoardField(0x1Cu), 	//waagrecht
@@ -58,9 +59,15 @@ bool BoardField::operator ==(const BoardField& other) const {
 BoardField::BoardField() :bitsUsed((FieldBits) 0){
 }
 
-bool isWinBoard(BoardField field){
+__attribute__((const))
+bool isWinBoard(const BoardField field){
 	for(int i = 0;i<8;i++){
 		if((field & Fields::winBoards[i])==Fields::winBoards[i]) return true;
 	}
 	return false;
+}
+
+__attribute__((const))
+FieldBits winMoves(BoardField set){
+	return winMoveTable[(FieldBits) set];
 }

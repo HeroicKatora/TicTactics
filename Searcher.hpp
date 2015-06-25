@@ -35,7 +35,7 @@ struct SearchNode{ //If rating = +-inf, win of one player,
 	/**
 	 * Discovers all possible moves for this node
 	 */
-	void discover(const GameState *);
+	void discover(const TacTicBoard&);
 	/**
 	 * Frees all children for this node
 	 */
@@ -62,9 +62,9 @@ class Searcher{
 	void parallelSearch(SearchNode *startNode);
 
 public:
-	Searcher(GameState * state);
+	Searcher(const GameState * state);
 
-	MoveSuggestion getBestKnownMove();
+	MoveSuggestion getBestKnownMove() const;
 
 	/**
 	 * Called to spawn parallel searcher threads

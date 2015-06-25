@@ -46,10 +46,12 @@
  * We can use g = log d
  * And n = node.weigth * log d
  */
+__attribute__((const))
 float functionN(unsigned depth){
 	return (float) depth;
 }
 
+__attribute__((pure))
 unsigned getWeightedMaxChildNumber(float weight, unsigned depth){
 	//We use caching since that is O(c), while the function n might not be
 	static std::vector<float> calculationResults {};
@@ -61,12 +63,12 @@ unsigned getWeightedMaxChildNumber(float weight, unsigned depth){
 	return weight * calculationResults[depth];
 }
 
-Searcher::Searcher(GameState * state):gameState(state), pause(true){
+Searcher::Searcher(const GameState * state):gameState(state), pause(true){
 	if(state->searcher) throw std::exception();
 	state->searcher = this;
 }
 
-MoveSuggestion Searcher::getBestKnownMove(){
+MoveSuggestion Searcher::getBestKnownMove() const{
 	SearchNode * m = topNode.children;
 	if(!m) return MoveSuggestion{MoveDescriptor{}, nan("")};
 	return MoveSuggestion{m->move, m->rating};
@@ -74,7 +76,6 @@ MoveSuggestion Searcher::getBestKnownMove(){
 
 void Searcher::runParallel() {
 	end = false;
-	static MoveHistory movesGenerated{};
 	//TODO implement spawning of threads
 
 }
@@ -106,20 +107,74 @@ void Searcher::endParallel() {
 	end = true;
 }
 
-size_t countPossibleMoves(const GameState* state, MoveDescriptor& oldMove){
-	if(state->isWon()) return 0;
-	//TODO count moves
+/**
+ * Counts the moves that are possible on a board without considering any limitations
+ */
+__attribute__((const))
+size_t countPossibleMoves(const TicTacBoard& board, FieldBits forbidden){
+	return 9-__builtin_popcount((FieldBits) (board.setPlayerOne| board.setPlayerTwo) | forbidden);
 }
 
-size_t discoverMoves(const GameState *state, SearchNode *&dest, MoveDescriptor& oldMove, size_t maxNumber) {
-	size_t count = countPossibleMoves(state, oldMove);
-	if(count == 0){
+/**
+ * Counts the possible moves that do not win the board
+ */
+__attribute__((const))
+size_t countNonWinMoves(const TicTacBoard& board){
+	FieldBits set = (FieldBits) (board.setPlayerOne|board.setPlayerTwo);
+	set |= winMoves(board.setPlayerOne);
+	return 9-__builtin_popcount((FieldBits) (board.setPlayerOne| board.setPlayerTwo));
+}
+
+__attribute__((const))
+size_t countBeginMoves(const TacTicBoard& state){
+	size_t moves = 0;
+	for(int i = 0;i<9;i++){
+		moves += countNonWinMoves(state.components[i]);
+	}
+	return moves-1; //Minus the middle move since that is guaranteed to be open
+}
+
+/**
+ * Returns positive values if the moves are on the board and negative if not
+ */
+signed countPlayMoves(const TacTicBoard& state, const MoveDescriptor& oldMove){
+	size_t index = oldMove.getBoardIndex();
+	size_t moves = countPossibleMoves(state.components[index], getFieldOfIndex(index));
+	bool allExcept = false;
+	if(moves == 0){
+		allExcept = true;
+		for(size_t i = 0;i<9;i++){
+			if(i == index) continue;
+			moves += countPossibleMoves(state.components[index], getFieldOfIndex(index));
+		}
+	}
+	return allExcept?-moves:moves;
+}
+
+size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDescriptor& oldMove) {
+	if(state.isWon()){
 		dest = NULL;
 		return 0;
 	}
-	dest = (SearchNode*) calloc(count, sizeof(SearchNode));
-	if(0 > maxNumber) maxNumber = count;
+	size_t count;
 	//TODO Fill search nodes
+	if(oldMove.isInvalidDefault()){
+		//This means we are on the first more after init
+		count = countBeginMoves(state);
+		dest = (SearchNode*) calloc(count, sizeof(SearchNode));
+		for(int i = 0;i<count;i++){
+
+		}
+	}else{
+		count = countPlayMoves(state, oldMove);
+		bool onBoard = true;
+		if(__builtin_expect(count < 0, 0)){
+			count = -count;
+			onBoard = false;
+		}
+		dest = (SearchNode*) calloc(count, sizeof(SearchNode));
+
+	}
 	return count;
 }
 
@@ -131,18 +186,18 @@ void Searcher::parallelSearch(SearchNode * startNode){
 	struct SearchPathNode{
 		SearchNode *node;
 		unsigned childIndex;
+		Move moveMade;
 	};
 
 	unsigned maxDepth = 1, depth;
 	std::stack<SearchPathNode> nodePath{};
-	SearchPathNode current{startNode, 0};
+	SearchPathNode current{startNode, 0, {startNode->move}};
 	auto out = [&](unsigned retain){
 		if(nodePath.size()){
 			for(unsigned i = retain;i<current.node->childCount;i++){
 				current.node->children[i].close();
 			}
-			Move m {current.node->move};
-			searchState.undoMove(m);
+			searchState.undoMove(current.moveMade);
 			current = nodePath.top();
 			nodePath.pop();
 			return false;
@@ -151,10 +206,10 @@ void Searcher::parallelSearch(SearchNode * startNode){
 		}
 	};
 	auto in = [&](SearchPathNode& newNode){
-		Move m {newNode.node->move};
-		searchState.applyAndChangeMove(m);
+		searchState.applyAndChangeMove(current.moveMade);
 		nodePath.push(current);
 		current = newNode;
+		current.node->rating = rate(searchState);
 		depth++;
 	};
 	bool load = false;
@@ -168,7 +223,7 @@ void Searcher::parallelSearch(SearchNode * startNode){
 			}
 			if(depth < maxDepth){
 				//Expand this node
-				current.node->discover(gameState);
+				current.node->discover(searchState.board);
 			}
 
 			//Search code
@@ -180,7 +235,8 @@ void Searcher::parallelSearch(SearchNode * startNode){
 				current.node->revalueChildren(searchState.isPlayerOneTurn());
 				load = true;
 			}else{
-				SearchPathNode next = {&current.node->children[current.childIndex], 0};
+				SearchPathNode next = {&current.node->children[current.childIndex],
+						0, {current.node->move}};
 				current.childIndex++;
 				in(next);
 			}
@@ -196,9 +252,9 @@ void Searcher::parallelSearch(SearchNode * startNode){
 	}
 }
 
-void SearchNode::discover(const GameState *state){
+void SearchNode::discover(const TacTicBoard& state){
 	if(!children){
-		childCount = discoverMoves(state, children, move, -1);
+		childCount = discoverMoves(state, children, move);
 	}
 }
 
@@ -207,12 +263,14 @@ void SearchNode::close(){
 	childCount = 0;
 }
 
+__attribute__((const))
 bool isTwoBetterThan(float one, float two, bool playerOne){
 	if(playerOne) return one < two;
 	else return one > two;
 }
 
-bool isTwoBetterThanNode(SearchNode& one, SearchNode& two, bool playerOne){
+__attribute__((const))
+bool isTwoBetterThanNode(const SearchNode& one, const SearchNode& two, bool playerOne){
 	return isTwoBetterThan(one.rating, two.rating, playerOne);
 }
 

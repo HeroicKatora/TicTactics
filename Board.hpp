@@ -43,6 +43,7 @@ struct TicTacBoard{
 	static const WonState WONP1 = 0x2;
 	static const WonState WONP2 = 0x4;
 
+	__attribute__((const))
 	static const bool isWon(WonState wonState){
 		return wonState > 1;
 	}
@@ -72,9 +73,19 @@ struct TacTicBoard:TicTacBoard{
 	}
 };
 
-bool isWinBoard(BoardField field);
+__attribute__((const))
+bool isWinBoard(const BoardField field);
 
 struct Fields{
 	static const BoardField winBoards [9];
 	static const BoardField fullBoard;
 };
+
+/**
+ * Returns field bits where all bits are set that would win the board if
+ * the player was playing alone. Apply & with the remaining fields and
+ * you get the possible moves that win the board for a player.
+ */
+__attribute__((const))
+FieldBits winMoves(BoardField board);
+

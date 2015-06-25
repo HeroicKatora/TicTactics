@@ -10,8 +10,8 @@ class TicTacBoard;
 class TacTicBoard;
 class GameState; //Declaration, so we don't run into include loops and their problems
 
-float rate(GameState& state);
+float rate(const GameState& state);
 
-float rate(TicTacBoard& board);
+float rate(const TicTacBoard& board);
 
-float rate(TacTicBoard& board);
+float rate(const TacTicBoard& board);
