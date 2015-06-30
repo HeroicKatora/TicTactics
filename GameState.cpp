@@ -76,7 +76,7 @@ bool GameState::isValidMove(Move& m) const {
 	valid &= ((fieldB & setInTarget) == 0);  //Is not on top of a set field
 	if(history.empty()){
 		valid &= boardB != 4 || fieldB != 0x10; //not the mid mid field
-		valid &= !isWinBoard((const FieldBits) board.components[boardB].setPlayerOne | fieldB);
+		valid &= (winMoves(board.components[boardB].setPlayerOne) & fieldB) == 0; //Not a board win
 	}else{
 		const Move& previousMove = history.top();
 		FieldBits backMove = getFieldOfBoard(previousMove.getBoardSet());

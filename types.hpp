@@ -13,6 +13,8 @@ typedef unsigned short FieldBits;
 //0..8, index of board
 typedef unsigned short BoardBits;
 
+static const FieldBits MID_FIELD = 0x10;
+
 inline FieldBits getFieldOfBoard(const BoardBits boardID){
 	return 0x1 << boardID;
 }
@@ -35,4 +37,12 @@ inline FieldBits getFieldOfIndex(const unsigned index){
 
 inline BoardBits getBoardOfIndex(const unsigned index){
 	return (BoardBits) index;
+}
+
+inline FieldBits invertField(const FieldBits& field){
+	return 0x1FF-field;
+}
+
+inline FieldBits invertField(const FieldBits&& field){
+	return 0x1FF-field;
 }

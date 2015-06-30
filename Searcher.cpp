@@ -156,24 +156,35 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 		dest = NULL;
 		return 0;
 	}
-	size_t count;
+	signed count;
+	size_t nodeIndex = 0;
 	//TODO Fill search nodes
 	if(oldMove.isInvalidDefault()){
 		//This means we are on the first more after init
 		count = countBeginMoves(state);
-		dest = (SearchNode*) calloc(count, sizeof(SearchNode));
-		for(int i = 0;i<count;i++){
-
+		dest = new SearchNode[count];
+		for(int i = 0;i<9;i++){
+			FieldBits nonMoves = (FieldBits)(state.components[i].setPlayerOne | state.components[i].setPlayerTwo);
+			if(i == 4) nonMoves |= MID_FIELD;
+			nonMoves |= winMoves(state.components[i].setPlayerOne);
+			FieldBits moves = invertField(nonMoves);
+			while(moves){
+				dest[nodeIndex++].move = {getBoardOfIndex(i), ~(moves^(-moves))};
+				moves &= (moves-1);
+			}
 		}
 	}else{
 		count = countPlayMoves(state, oldMove);
-		bool onBoard = true;
-		if(__builtin_expect(count < 0, 0)){
+		bool onBoard = count < 0;
+		if(__builtin_expect(onBoard, false)){
 			count = -count;
-			onBoard = false;
 		}
-		dest = (SearchNode*) calloc(count, sizeof(SearchNode));
+		dest = new SearchNode[count];
+		if(__builtin_expect(onBoard, false)){
 
+		}else{
+
+		}
 	}
 	return count;
 }

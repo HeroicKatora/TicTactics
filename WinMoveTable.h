@@ -1,7 +1,7 @@
 //This file is used to look up which moves could win a board in a certain situation
 //Winning moves are moves, after which the player has a tic tac toe
 //Therefore this does not check if the tic tac toe existed before (subject to change)#include "types.hpp"
-FieldBits winMoveTable [] = {0
+ __attribute__((hot)) FieldBits winMoveTable [] = {0
 ,0
 ,0
 ,4
