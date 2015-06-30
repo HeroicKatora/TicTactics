@@ -16,7 +16,11 @@ void EngineController::notifyMoveMade(Move& m) {
 }
 
 void EngineController::notifyLine(const char* line) {
-	//TODO handle engine commands
+	if(matches(line, "Go")){
+		controlledSearcher.runParallel();
+	}else if(matches(line, "Stop")){
+		controlledSearcher.endParallel();
+	}
 }
 
 void EngineController::notifySetup(const char* line) {

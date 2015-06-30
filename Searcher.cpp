@@ -120,9 +120,9 @@ size_t countPossibleMoves(const TicTacBoard& board, FieldBits forbidden){
  */
 __attribute__((const))
 size_t countNonWinMoves(const TicTacBoard& board){
-	FieldBits set = (FieldBits) (board.setPlayerOne|board.setPlayerTwo);
+	FieldBits set = board.getBlockedFields();
 	set |= winMoves(board.setPlayerOne);
-	return 9-__builtin_popcount((FieldBits) (board.setPlayerOne| board.setPlayerTwo));
+	return 9-__builtin_popcount(set);
 }
 
 __attribute__((const))
@@ -158,35 +158,58 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 	}
 	signed count;
 	size_t nodeIndex = 0;
-	//TODO Fill search nodes
 	if(oldMove.isInvalidDefault()){
 		//This means we are on the first more after init
 		count = countBeginMoves(state);
 		dest = new SearchNode[count];
 		for(int i = 0;i<9;i++){
-			FieldBits nonMoves = (FieldBits)(state.components[i].setPlayerOne | state.components[i].setPlayerTwo);
+			FieldBits nonMoves = state.components[i].getBlockedFields();
 			if(i == 4) nonMoves |= MID_FIELD;
 			nonMoves |= winMoves(state.components[i].setPlayerOne);
 			FieldBits moves = invertField(nonMoves);
 			while(moves){
-				dest[nodeIndex++].move = {getBoardOfIndex(i), ~(moves^(-moves))};
+				dest[nodeIndex++].move = {getBoardOfIndex(i), (FieldBits)~(moves^(-moves))};
 				moves &= (moves-1);
 			}
 		}
 	}else{
 		count = countPlayMoves(state, oldMove);
-		bool onBoard = count < 0;
-		if(__builtin_expect(onBoard, false)){
+		bool fullBoard = count < 0;
+		if(__builtin_expect(fullBoard, false)){
 			count = -count;
 		}
 		dest = new SearchNode[count];
-		if(__builtin_expect(onBoard, false)){
-
+		size_t intoIndex = oldMove.getFieldIndex();
+		FieldBits backField = getFieldOfIndex(oldMove.getBoardIndex());
+		if(__builtin_expect(fullBoard, false)){
+			for(unsigned i = 0;i<9;i++){
+				if(i == oldMove.getBoardIndex()) continue;
+				FieldBits nonMoves = state.components[i].getBlockedFields();
+				nonMoves |= backField;
+				FieldBits moves = invertField(nonMoves);
+				while(moves){
+					dest[nodeIndex++].move = {getBoardOfIndex(i), (FieldBits)~(moves^(-moves))};
+					moves &= (moves-1);
+				}
+			}
 		}else{
-
+			FieldBits nonMoves = state.components[intoIndex].getBlockedFields();
+			nonMoves |= backField;
+			FieldBits moves = invertField(nonMoves);
+			while(moves){
+				dest[nodeIndex++].move = {getBoardOfIndex(intoIndex), (FieldBits)~(moves^(-moves))};
+				moves &= (moves-1);
+			}
 		}
 	}
 	return count;
+}
+
+void printBestPath(SearchNode * node){
+	char buffer [1000];
+	for(int i = 0;i<100 && node;i++){
+
+	}
 }
 
 void Searcher::parallelSearch(SearchNode * startNode){
@@ -260,6 +283,7 @@ void Searcher::parallelSearch(SearchNode * startNode){
 			}
 		}
 		current.childIndex = 0;
+		printBestPath(startNode);
 	}
 }
 
@@ -288,6 +312,11 @@ bool isTwoBetterThanNode(const SearchNode& one, const SearchNode& two, bool play
 void SearchNode::revalueChildren(bool playerOne){
 	if(!children) return;
 	std::sort_heap(children, children+childCount-1, std::bind(isTwoBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
+	float weight = 1;
+	for(unsigned i = 0;i<childCount;i++){
+		weight /= 2;
+		children[i].weight = weight;
+	}
 	rating = children[0].rating;
 }
 

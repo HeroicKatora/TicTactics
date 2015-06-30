@@ -58,6 +58,8 @@ struct TicTacBoard{
 	bool hasPlayerOneWon() const;
 	bool hasPlayerTwoWon() const;
 
+	FieldBits getBlockedFields() const;
+
 	void applyMove(bool playerOne, FieldBits field);
 };
 

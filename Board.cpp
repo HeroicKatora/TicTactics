@@ -59,6 +59,10 @@ bool BoardField::operator ==(const BoardField& other) const {
 BoardField::BoardField() :bitsUsed((FieldBits) 0){
 }
 
+FieldBits TicTacBoard::getBlockedFields() const{
+	return (FieldBits)(setPlayerOne|setPlayerTwo);
+}
+
 __attribute__((const))
 bool isWinBoard(const BoardField field){
 	for(int i = 0;i<8;i++){
