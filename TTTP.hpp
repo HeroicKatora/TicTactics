@@ -30,6 +30,7 @@ struct TTTPConst{
 	static CC channelDebug [];
 	static CC channelChat [];
 	static CC channelMeta [];
+	static CC channelEngine [];
 
 	static CC lineSettingsEngine [];
 	static CC lineSettingsGame [];

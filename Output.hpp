@@ -20,11 +20,11 @@ void printErr(const char *,...);
 void printInfo(const char *, ...);
 void printChannel(const char *, const char *,...);
 
-int printMove(Move&);
-int printMove(MoveDescriptor&);
+int printMove(const Move&);
+int printMove(const MoveDescriptor&);
 
-int sprintMove(char *, Move&);
-int sprintMove(char *, MoveDescriptor&);
+int sprintMove(char *, const Move&);
+int sprintMove(char *, const MoveDescriptor&);
 
 int printBoard(const TicTacBoard&);
 /**

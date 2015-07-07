@@ -15,7 +15,7 @@ struct EngineController{
 
 	void notifyMoveMade(Move& m);
 
-	void notifyLine(const char * line);
+	bool notifyLine(const char * line);
 
 	void notifySetup(const char * line);
 };

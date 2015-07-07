@@ -42,7 +42,7 @@ void gameSettingsPhase();
 void gameLoop();
 
 void playMove();
-void engineOp();
+bool engineOp();
 void printReq();
 void setupEngine();
 void setupGame();
@@ -101,8 +101,7 @@ void gameLoop(){
 		goToNextLine();
 		if(matches(line, reg::move)){
 			playMove();
-		}else if(matches(line, reg::engineOp)){
-			engineOp();
+		}else if(engineOp()){
 		}else if(matches(line, reg::printReq)){
 			printReq();
 		}else{
@@ -231,10 +230,10 @@ void playMove(){
 }
 
 /**
- * Handles engine operation line
+ * Handles engine operation line and returns if it was handled
  */
-void engineOp(){
-	engineControl.notifyLine(line);
+bool engineOp(){
+	return engineControl.notifyLine(line);
 }
 
 /**

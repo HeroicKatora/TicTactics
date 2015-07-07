@@ -53,25 +53,25 @@ void printChannel(const char * identifier, const char * s, ...){
 	va_end(args);
 }
 
-int printMove(Move& move) {
+int printMove(const Move& move) {
 	char mv[20];
 	int ret = sprintMove(mv, move);
 	printOut(mv);
 	return ret;
 }
 
-int printMove(MoveDescriptor& desc) {
+int printMove(const MoveDescriptor& desc) {
 	char mv[20];
 	int ret = sprintMove(mv, desc);
 	printOut(mv);
 	return ret;
 }
 
-int sprintMove(char* dest, Move& move) {
+int sprintMove(char* dest, const Move& move) {
 	return sprintf(dest, "B%uF%u", move.getBoardSet(), getBoardOfField(move.getFieldSet()));
 }
 
-int sprintMove(char* dest, MoveDescriptor& descriptor) {
+int sprintMove(char* dest, const MoveDescriptor& descriptor) {
 	return sprintf(dest, "B%uF%u", descriptor.getBoardIndex(), descriptor.getFieldIndex());
 }
 

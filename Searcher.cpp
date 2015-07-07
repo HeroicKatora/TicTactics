@@ -7,6 +7,8 @@
 
 #include "Searcher.hpp"
 #include "GameState.hpp"
+#include "Output.hpp"
+#include "TTTP.hpp"
 #include <stack>
 #include <vector>
 
@@ -15,6 +17,7 @@
 #include <chrono>
 #include <algorithm>
 #include <functional>
+#include <future>
 
 /**
  * Calculates the number n of childs allowed for a node of given weight and depth.
@@ -76,8 +79,8 @@ MoveSuggestion Searcher::getBestKnownMove() const{
 
 void Searcher::runParallel() {
 	end = false;
-	//TODO implement spawning of threads
-
+	searchThread = std::thread(std::bind(startSearch, this, &topNode, 0, 0));
+	searchThread.detach();
 }
 
 void Searcher::notifyUndo(Move& move) {
@@ -105,6 +108,7 @@ void Searcher::setPause(bool pauseNow) {
 void Searcher::endParallel() {
 	setPause(false);
 	end = true;
+	if(searchThread.joinable()) searchThread.join();
 }
 
 /**
@@ -205,17 +209,20 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 	return count;
 }
 
-void printBestPath(SearchNode * node){
+void printBestPath(const SearchNode * node){
 	char buffer [1000];
+	int off = 0;
 	for(int i = 0;i<100 && node;i++){
-
+		off += sprintMove(buffer+off, node->move);
 	}
+	printChannel(TTTPConst::channelEngine, "%s", buffer);
 }
 
-void Searcher::parallelSearch(SearchNode * startNode){
+void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t maxDuration){
 	if(!startNode)
 		return;
 
+	time_t startTime = time(NULL);
 	GameState searchState = *gameState;
 	struct SearchPathNode{
 		SearchNode *node;
@@ -246,14 +253,17 @@ void Searcher::parallelSearch(SearchNode * startNode){
 		current.node->rating = rate(searchState);
 		depth++;
 	};
+	printInfo("Started searching");
 	bool load = false;
-	for(;!end;maxDepth++){
+	for(;!end && (maximalDepth <= 0 || maxDepth < maximalDepth);maxDepth++){
 		depth = 0;
+		printInfo("Search depth %u", maxDepth);
 		while(!end){
 			if(load){
 				if(out(getWeightedMaxChildNumber(current.node->weight, depth))){
 					break;
 				}
+				load = false;
 			}
 			if(depth < maxDepth){
 				//Expand this node
@@ -275,6 +285,9 @@ void Searcher::parallelSearch(SearchNode * startNode){
 				in(next);
 			}
 
+			if(maxDuration >= 0 && time(NULL)-startTime > maxDuration){
+				end = true;
+			}
 
 			//Makes the thread pause until pauseMutex is available
 			if(!end){

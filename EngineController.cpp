@@ -15,12 +15,20 @@ void EngineController::notifyMoveMade(Move& m) {
 	controlledSearcher.notifyMoveMade(m);
 }
 
-void EngineController::notifyLine(const char* line) {
+bool EngineController::notifyLine(const char* line) {
 	if(matches(line, "Go")){
-		controlledSearcher.runParallel();
+		controlledSearcher.setPause(false);
+		controlledSearcher.startSearch(&controlledSearcher.topNode, 20, 2000ll);
 	}else if(matches(line, "Stop")){
 		controlledSearcher.endParallel();
+	}else if(matches(line, "Pause")){
+		controlledSearcher.setPause(true);
+	}else if(matches(line, "Unpause")){
+		controlledSearcher.setPause(false);
+	}else{
+		return false;
 	}
+	return true;
 }
 
 void EngineController::notifySetup(const char* line) {

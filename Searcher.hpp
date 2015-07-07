@@ -10,10 +10,12 @@ class Searcher;
 
 #include <atomic>
 #include <mutex>
+#include <thread>
 #include "Move.hpp"
 #include "Rating.hpp"
 
 constexpr unsigned SEARCHER_SIZE = 500000;
+class EngineController;
 
 struct MoveSuggestion{
 	MoveDescriptor move;
@@ -53,13 +55,15 @@ struct SearchNode{ //If rating = +-inf, win of one player,
 };
 
 class Searcher{
+	friend EngineController;
 	const GameState *gameState;
 	std::atomic<bool> pause;
 	std::mutex pauseMutex;
 	std::atomic<bool> end;
+	std::thread searchThread;
 	SearchNode topNode;
 
-	void parallelSearch(SearchNode *startNode);
+	void startSearch(SearchNode *startNode, unsigned maximalDepth, time_t maxDuration);
 
 public:
 	Searcher(const GameState * state);

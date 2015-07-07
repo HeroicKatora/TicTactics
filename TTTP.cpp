@@ -27,6 +27,7 @@ CC TTTPConst::Set2WA = 'o';
 CC TTTPConst::channelDebug [] = "TTTP:Debug";
 CC TTTPConst::channelChat [] = "TTTP:Chat";
 CC TTTPConst::channelMeta [] = "TTTP:Meta";
+CC TTTPConst::channelEngine [] = "TTTP:Engine";
 
 CC TTTPConst::lineSettingsEngine [] = "Engine setting";
 CC TTTPConst::lineSettingsGame [] = "Game settings";
