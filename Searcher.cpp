@@ -78,9 +78,9 @@ MoveSuggestion Searcher::getBestKnownMove() const{
 }
 
 void Searcher::runParallel() {
-	end = false;
+	/*end = false;
 	searchThread = std::thread(std::bind(startSearch, this, &topNode, 0, 0));
-	searchThread.detach();
+	searchThread.detach();*/ // Disabled for now
 }
 
 void Searcher::notifyUndo(Move& move) {
@@ -214,8 +214,9 @@ void printBestPath(const SearchNode * node){
 	int off = 0;
 	for(int i = 0;i<100 && node;i++){
 		off += sprintMove(buffer+off, node->move);
+		node = node->children;
 	}
-	printChannel(TTTPConst::channelEngine, "%s", buffer);
+	printChannel(TTTPConst::channelEngine, buffer);
 }
 
 void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t maxDuration){
@@ -225,14 +226,17 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 	time_t startTime = time(NULL);
 	GameState searchState = *gameState;
 	struct SearchPathNode{
+		SearchPathNode(SearchNode *node):node(node),
+				childIndex(0), moveMade(node->move){
+		}
 		SearchNode *node;
 		unsigned childIndex;
 		Move moveMade;
 	};
 
-	unsigned maxDepth = 1, depth;
+	unsigned maxDepth = 1, depth = 0;
 	std::stack<SearchPathNode> nodePath{};
-	SearchPathNode current{startNode, 0, {startNode->move}};
+	SearchPathNode current{startNode};
 	auto out = [&](unsigned retain){
 		if(nodePath.size()){
 			for(unsigned i = retain;i<current.node->childCount;i++){
@@ -241,15 +245,16 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 			searchState.undoMove(current.moveMade);
 			current = nodePath.top();
 			nodePath.pop();
+			depth--;
 			return false;
 		}else{
 			return true;
 		}
 	};
 	auto in = [&](SearchPathNode& newNode){
-		searchState.applyAndChangeMove(current.moveMade);
 		nodePath.push(current);
 		current = newNode;
+		searchState.applyAndChangeMove(current.moveMade);
 		current.node->rating = rate(searchState);
 		depth++;
 	};
@@ -279,13 +284,13 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 				current.node->revalueChildren(searchState.isPlayerOneTurn());
 				load = true;
 			}else{
-				SearchPathNode next = {&current.node->children[current.childIndex],
-						0, {current.node->move}};
+				SearchPathNode next = {&current.node->children[current.childIndex]};
 				current.childIndex++;
 				in(next);
 			}
 
-			if(maxDuration >= 0 && time(NULL)-startTime > maxDuration){
+			if(maxDuration > 0 && time(NULL)-startTime > maxDuration){
+				printInfo(EngineConstants::computationTimeExceeded);
 				end = true;
 			}
 

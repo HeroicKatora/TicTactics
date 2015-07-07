@@ -4,14 +4,15 @@
  *  Created on: 18.05.2015
  *      Author: Andreas Molzer
  */
+#include "string.h"
 #include <cstdio>
+#include <cstdlib>
+#include <string>
 #include "Input.hpp"
 #include "GameState.hpp"
 #include "Debug.hpp"
 #include "Output.hpp"
 #include "EngineController.hpp"
-#include <cstdlib>
-#include <string>
 
 GameState state{};
 Searcher searcher{&state};

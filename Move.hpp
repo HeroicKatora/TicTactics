@@ -40,7 +40,7 @@ struct MoveDescriptor{
 		return getIndexOfField(whichField);
 	}
 	bool isInvalidDefault() const{
-		return whichBoard == -1 && whichField == -1;
+		return whichBoard == (BoardBits)-1 && whichField == (FieldBits)-1;
 	}
 };
 

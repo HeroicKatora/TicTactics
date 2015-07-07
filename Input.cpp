@@ -14,15 +14,15 @@
 std::regex reg::protocolStart ("TTTP v1");
 std::regex reg::commentStart(":.*");
 std::regex reg::commentEnd (".*:");
-std::regex reg::asynchronous ("\\[.*\\].*");
+std::regex reg::asynchronous ("\\[(.*)\\](.*)");
 std::regex reg::startGame ("Start game");
 std::regex reg::startTurns ("Start turns");
 std::regex reg::endSettings ("End settings");
 std::regex reg::initP1 ("Player One init");
 std::regex reg::initP2 ("Player Two init");
-std::regex reg::move ("B[1-9]F[1-9]");
+std::regex reg::move ("B[1-9]F[1-9]", std::regex_constants::ECMAScript);
 std::regex reg::engineOp ("");
-std::regex reg::printReq ("Print (B[1-9]|full)");
+std::regex reg::printReq ("Print (B[1-9]|full)", std::regex_constants::ECMAScript);
 
 std::unordered_map<std::string , void (*)(char *)> dynIDMap {};
 /**

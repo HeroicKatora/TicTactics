@@ -61,3 +61,6 @@ CC EngineConstants::initFieldOverflow [] = " board overflow";
 CC EngineConstants::initMiddleComment [] = "\nYou can not move into the mid during initial phase.";
 CC EngineConstants::initBoardComment [] = "\nYou can only place one mark on equivalent fields.";
 CC EngineConstants::initFieldComment [] = "\nYou can only place two marks on the same board.";
+
+CC EngineConstants::computationTimeExceeded [] = "Maximal computation time was exceeded";
+CC EngineConstants::depthLimitReached [] = "Computation depth limit was reached";

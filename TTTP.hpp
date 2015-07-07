@@ -65,4 +65,7 @@ struct EngineConstants{
 	static CC initBoardComment [];
 	static CC initFieldOverflow [];
 	static CC initFieldComment [];
+
+	static CC computationTimeExceeded [];
+	static CC depthLimitReached [];
 };

@@ -11,7 +11,7 @@
 #include "Output.hpp"
 
 void GameState::applyAndChangeMove(Move& m) {
-	TicTacBoard *ticTacBoard = board.components+m.getBoardSet();
+	TicTacBoard *ticTacBoard = board.components+getIndexOfBoard(m.getBoardSet());
 
 	m.prevWonState = ticTacBoard->wonState;
 	ticTacBoard->applyMove(playerOneTurn, m.getFieldSet());
