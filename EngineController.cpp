@@ -18,7 +18,7 @@ void EngineController::notifyMoveMade(Move& m) {
 bool EngineController::notifyLine(const char* line) {
 	if(matches(line, "Go")){
 		controlledSearcher.setPause(false);
-		controlledSearcher.startSearch(&controlledSearcher.topNode, 20, 0ll);
+		controlledSearcher.startSearch(&controlledSearcher.topNode, 30, 0ll);
 	}else if(matches(line, "Stop")){
 		controlledSearcher.endParallel();
 	}else if(matches(line, "Pause")){

@@ -51,7 +51,7 @@
  */
 __attribute__((const))
 float functionN(unsigned depth){
-	return (float) depth;
+	return (float) depth * 1000;
 }
 
 __attribute__((pure))
@@ -66,9 +66,11 @@ unsigned getWeightedMaxChildNumber(float weight, unsigned depth){
 	return weight * calculationResults[depth];
 }
 
-Searcher::Searcher(const GameState * state):gameState(state), pause(true){
+Searcher::Searcher(const GameState * state):gameState(state), pause(true),
+		pauseMutex(), end(false), topNode(){
 	if(state->searcher) throw std::exception();
 	state->searcher = this;
+	topNode.weight = 16;
 }
 
 MoveSuggestion Searcher::getBestKnownMove() const{
@@ -142,21 +144,25 @@ size_t countBeginMoves(const TacTicBoard& state){
  * Returns positive values if the moves are on the board and negative if not
  */
 signed countPlayMoves(const TacTicBoard& state, const MoveDescriptor& oldMove){
-	size_t index = oldMove.getBoardIndex();
-	size_t moves = countPossibleMoves(state.components[index], getFieldOfIndex(index));
+	size_t backIndex = oldMove.getBoardIndex();
+	size_t index = oldMove.getFieldIndex();
+	size_t moves = countPossibleMoves(state.components[index], getFieldOfIndex(backIndex));
 	bool allExcept = false;
 	if(moves == 0){
 		allExcept = true;
 		for(size_t i = 0;i<9;i++){
 			if(i == index) continue;
-			moves += countPossibleMoves(state.components[index], getFieldOfIndex(index));
+			moves += countPossibleMoves(state.components[i], getFieldOfIndex(backIndex));
 		}
 	}
 	return allExcept?-moves:moves;
 }
 
+static size_t wonStates = 0;
+
 size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDescriptor& oldMove) {
 	if(state.isWon()){
+		wonStates++;
 		dest = NULL;
 		return 0;
 	}
@@ -165,6 +171,10 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 	if(oldMove.isInvalidDefault()){
 		//This means we are on the first more after init
 		count = countBeginMoves(state);
+		if(count == 0){
+			dest = NULL;
+			return 0;
+		}
 		dest = new SearchNode[count];
 		for(int i = 0;i<9;i++){
 			FieldBits nonMoves = state.components[i].getBlockedFields();
@@ -172,12 +182,17 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 			nonMoves |= winMoves(state.components[i].setPlayerOne);
 			FieldBits moves = invertField(nonMoves);
 			while(moves){
-				dest[nodeIndex++].move = {getBoardOfIndex(i), (FieldBits)~(moves^(-moves))};
+				dest[nodeIndex].move = {getBoardOfIndex(i), (FieldBits)(moves&(~moves+1))};
+				nodeIndex++;
 				moves &= (moves-1);
 			}
 		}
 	}else{
 		count = countPlayMoves(state, oldMove);
+		if(count == 0){
+			dest = NULL;
+			return 0;
+		}
 		bool fullBoard = count < 0;
 		if(__builtin_expect(fullBoard, false)){
 			count = -count;
@@ -192,7 +207,8 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 				nonMoves |= backField;
 				FieldBits moves = invertField(nonMoves);
 				while(moves){
-					dest[nodeIndex++].move = {getBoardOfIndex(i), (FieldBits)~(moves^(-moves))};
+					dest[nodeIndex].move = {getBoardOfIndex(i), (FieldBits)(moves&(~moves+1))};
+					nodeIndex++;
 					moves &= (moves-1);
 				}
 			}
@@ -201,7 +217,8 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 			nonMoves |= backField;
 			FieldBits moves = invertField(nonMoves);
 			while(moves){
-				dest[nodeIndex++].move = {getBoardOfIndex(intoIndex), (FieldBits)~(moves^(-moves))};
+				dest[nodeIndex].move = {getBoardOfIndex(intoIndex), (FieldBits)(moves&(~moves+1))};
+				nodeIndex++;
 				moves &= (moves-1);
 			}
 		}
@@ -211,9 +228,10 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 
 void printBestPath(const SearchNode * node){
 	char buffer [1000];
-	int off = 0;
+	int off = sprintf(buffer, "%f ", node->rating);
 	for(int i = 0;i<100 && node;i++){
 		off += sprintMove(buffer+off, node->move);
+		off += sprintf(buffer+off, " ");
 		node = node->children;
 	}
 	printChannel(TTTPConst::channelEngine, buffer);
@@ -248,6 +266,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 			depth--;
 			return false;
 		}else{
+			depth--;
 			return true;
 		}
 	};
@@ -263,12 +282,16 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 	for(;!end && (maximalDepth <= 0 || maxDepth < maximalDepth);maxDepth++){
 		depth = 0;
 		printOut(":Search depth %u:", maxDepth);
+		size_t nodesSearched = 0;
+		size_t strangeNodes = 0;
+		size_t finalNodes = 0;
+		time_t timeStart = time(NULL);
 		while(!end){
 			if(load){
+				load = false;
 				if(out(getWeightedMaxChildNumber(current.node->weight, depth))){
 					break;
 				}
-				load = false;
 			}
 			if(depth < maxDepth){
 				//Expand this node
@@ -282,10 +305,15 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 				load = true;
 			}else if(current.childIndex == current.node->childCount){
 				current.node->revalueChildren(searchState.isPlayerOneTurn());
+				if(current.childIndex == 0){
+					finalNodes++;
+					if(current.node->children) strangeNodes++;
+				}
 				load = true;
 			}else{
 				SearchPathNode next = {&current.node->children[current.childIndex]};
 				current.childIndex++;
+				nodesSearched++;
 				in(next);
 			}
 
@@ -302,6 +330,8 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 		}
 		current.childIndex = 0;
 		printBestPath(startNode->children);
+		printInfo("Searched: %u Strange %u Final %u, Time: %u, Won states %u",
+				nodesSearched, strangeNodes, finalNodes, time(NULL)-timeStart, wonStates);
 	}
 }
 
@@ -333,16 +363,17 @@ bool isTwoBetterThanNode(const SearchNode& one, const SearchNode& two, bool play
 
 void SearchNode::revalueChildren(bool playerOne){
 	if(!children) return;
-	std::sort_heap(children, children+childCount-1, std::bind(isTwoBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
-	float weight = 1;
+	std::stable_sort(children, children+childCount-1, std::bind(isTwoBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
+	float chweight = weight;
 	for(unsigned i = 0;i<childCount;i++){
-		weight /= 2;
-		children[i].weight = weight;
+		chweight /= 2;
+		children[i].weight = chweight;
 	}
 	rating = children[0].rating;
 }
 
 void SearchNode::setToMaxChild(bool playerOne){
+	rating = static_cast<float>(0xFFFFFFFF);
 	for(unsigned int i = 0;i<childCount;i++){
 		rating = isTwoBetterThan(rating, children[i].rating, playerOne)?children[i].rating:rating;
 	}
