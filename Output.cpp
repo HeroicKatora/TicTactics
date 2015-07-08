@@ -13,14 +13,18 @@
 std::mutex outMut{};
 std::mutex errMut{};
 
+void printOut(const char *format, va_list& arguments){
+	outMut.lock();
+	vfprintf(stdout, format, arguments);
+	outMut.unlock();
+}
+
 void printOut(const char * content ...){
 	char out[TTTPConst::lineLength];
 	sprintf(out, "%s\n", content);
 	va_list args;
 	va_start(args, content);
-	outMut.lock();
-	vfprintf(stdout, out, args);
-	outMut.unlock();
+	printOut(out, args);
 	va_end(args);
 }
 
@@ -37,7 +41,7 @@ void printErr(const char * content, ...){
 
 void printInfo(const char * s, ...){
 	char out[TTTPConst::lineLength];
-	sprintf(out, ":%s:", s);
+	sprintf(out, ":%s:\n", s);
 	va_list args;
 	va_start(args, s);
 	printOut(out, args);
@@ -46,7 +50,7 @@ void printInfo(const char * s, ...){
 
 void printChannel(const char * identifier, const char * s, ...){
 	char out[TTTPConst::lineLength];
-	sprintf(out, "[%s]%s", identifier, s);
+	sprintf(out, "[%s]%s\n", identifier, s);
 	va_list args;
 	va_start(args, s);
 	printOut(out, args);
@@ -68,11 +72,11 @@ int printMove(const MoveDescriptor& desc) {
 }
 
 int sprintMove(char* dest, const Move& move) {
-	return sprintf(dest, "B%uF%u", move.getBoardSet(), getBoardOfField(move.getFieldSet()));
+	return sprintf(dest, "B%uF%u", getIndexOfBoard(move.getBoardSet())+1, getIndexOfField(move.getFieldSet())+1);
 }
 
 int sprintMove(char* dest, const MoveDescriptor& descriptor) {
-	return sprintf(dest, "B%uF%u", descriptor.getBoardIndex(), descriptor.getFieldIndex());
+	return sprintf(dest, "B%uF%u", descriptor.getBoardIndex()+1, descriptor.getFieldIndex()+1);
 }
 
 int sprintRow(char * dest,const TicTacBoard& board, int row, const GameState * surrGame, int boarInd){

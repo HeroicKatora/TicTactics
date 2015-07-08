@@ -262,7 +262,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 	bool load = false;
 	for(;!end && (maximalDepth <= 0 || maxDepth < maximalDepth);maxDepth++){
 		depth = 0;
-		printInfo("Search depth %u", maxDepth);
+		printOut(":Search depth %u:", maxDepth);
 		while(!end){
 			if(load){
 				if(out(getWeightedMaxChildNumber(current.node->weight, depth))){
@@ -301,7 +301,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 			}
 		}
 		current.childIndex = 0;
-		printBestPath(startNode);
+		printBestPath(startNode->children);
 	}
 }
 
@@ -312,7 +312,11 @@ void SearchNode::discover(const TacTicBoard& state){
 }
 
 void SearchNode::close(){
-	free(children);
+	for(unsigned i = 0;i<childCount;i++){
+		children[i].close();
+	}
+	delete(children);
+	children = NULL;
 	childCount = 0;
 }
 
