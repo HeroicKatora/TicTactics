@@ -332,6 +332,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 		printBestPath(startNode->children);
 		printInfo("Searched: %u Strange %u Final %u, Time: %u, Won states %u",
 				nodesSearched, strangeNodes, finalNodes, time(NULL)-timeStart, wonStates);
+		wonStates = 0;
 	}
 }
 
