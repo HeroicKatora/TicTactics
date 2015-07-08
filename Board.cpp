@@ -24,13 +24,13 @@ bool BoardField::getStateOfCell(unsigned index) const {
 
 bool TicTacBoard::checkPlayerOneWon() const {
 	if(hasPlayerOneWon()) return true;
-	if(wonState == ONLYBOTH) return false;
+	if(wonState == ONLYBOTH && !((setPlayerOne|setPlayerTwo) == 0x1FF)) return false;
 	return isWinBoard(setPlayerOne);
 }
 
 bool TicTacBoard::checkPlayerTwoWon() const{
 	if(hasPlayerTwoWon()) return true;
-	if(wonState == ONLYBOTH) return false;
+	if(wonState == ONLYBOTH && !((setPlayerOne|setPlayerTwo) == 0x1FF)) return false;
 	return isWinBoard(setPlayerTwo);
 }
 

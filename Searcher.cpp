@@ -90,7 +90,12 @@ void Searcher::notifyUndo(Move& move) {
 }
 
 void Searcher::notifyMoveMade(Move& move) {
-
+	topNode.move = {move.getBoardSet(), move.getFieldSet()};
+	topNode.childCount = 0;
+	delete(topNode.children);
+	topNode.children = NULL;
+	topNode.rating = 0;
+	topNode.weight = 1;
 }
 
 void Searcher::setPause(bool pauseNow) {

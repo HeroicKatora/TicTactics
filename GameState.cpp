@@ -38,14 +38,14 @@ void GameState::_applyMove(Move&& m){
 void GameState::undoMove(Move& m){
 	TicTacBoard *ticTacBoard = gameboard.components+m.getBoardSet();
 	playerOneTurn = !playerOneTurn;
-	gameboard.setPlayerOne.bitsUsed ^= m.getWonBoardPOne();
-	gameboard.setPlayerTwo.bitsUsed ^= m.getWonBoardPTwo();
+	gameboard.setPlayerOne.bitsUsed -= m.getWonBoardPOne();
+	gameboard.setPlayerTwo.bitsUsed -= m.getWonBoardPTwo();
 	if(TicTacBoard::isWon(gameboard.wonState)){
 		gameboard.wonState ^= ticTacBoard->wonState;
 	}
+	if(playerOneTurn) ticTacBoard->setPlayerOne.bitsUsed -= m.getFieldSet();
+	else ticTacBoard->setPlayerTwo.bitsUsed -= m.getFieldSet();
 	ticTacBoard->wonState = m.getPrevWonState(ticTacBoard->wonState);
-	if(playerOneTurn) ticTacBoard->setPlayerOne.bitsUsed ^= m.getFieldSet();
-	else ticTacBoard->setPlayerTwo.bitsUsed ^= m.getFieldSet();
 }
 
 bool GameState::playMove(Move m) {
