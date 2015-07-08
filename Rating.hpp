@@ -6,12 +6,19 @@
  */
 #pragma once
 
+struct Ratings{
+	static signed RATING_P1_WON;
+	static signed RATING_P2_WON;
+	static signed RATING_P1_GAME;
+	static signed RATING_P2_GAME;
+};
+
 class TicTacBoard;
 class TacTicBoard;
 class GameState; //Declaration, so we don't run into include loops and their problems
 
-float rate(const GameState& state);
+signed rate(const GameState& state);
 
-float rate(const TicTacBoard& board);
+signed rate(const TicTacBoard& board);
 
-float rate(const TacTicBoard& board);
+signed rate(const TacTicBoard& board);

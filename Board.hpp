@@ -55,6 +55,9 @@ struct TicTacBoard{
 	WonState wonState;
 	BoardField setPlayerOne, setPlayerTwo;
 
+	bool checkPlayerOneWon() const;
+	bool checkPlayerTwoWon() const;
+
 	bool hasPlayerOneWon() const;
 	bool hasPlayerTwoWon() const;
 

@@ -11,31 +11,41 @@
 #include "Output.hpp"
 
 void GameState::applyAndChangeMove(Move& m) {
-	TicTacBoard *ticTacBoard = board.components+getIndexOfBoard(m.getBoardSet());
+	TicTacBoard *ticTacBoard = gameboard.components+getIndexOfBoard(m.getBoardSet());
 
 	m.prevWonState = ticTacBoard->wonState;
 	ticTacBoard->applyMove(playerOneTurn, m.getFieldSet());
 	if(!TicTacBoard::isWon(m.prevWonState)){
 		//Potential new win
 		BoardBits wonBoard = 0x1 << m.getBoardSet();
-		if(ticTacBoard->hasPlayerOneWon()) board.applyMove(true, wonBoard);
-		if(ticTacBoard->hasPlayerTwoWon()) board.applyMove(false, wonBoard);
+		if(ticTacBoard->hasPlayerOneWon()){
+			gameboard.applyMove(true, wonBoard);
+			m.boardWinOne = wonBoard;
+		}
+		if(ticTacBoard->hasPlayerTwoWon()){
+			gameboard.applyMove(false, wonBoard);
+			m.boardWinTwo = wonBoard;
+		}
+
 	}
 	playerOneTurn = !playerOneTurn;
 }
 
-void GameState::_applyMove(Move m){
+void GameState::_applyMove(Move&& m){
 	applyAndChangeMove(m);
 }
 
 void GameState::undoMove(Move& m){
+	TicTacBoard *ticTacBoard = gameboard.components+m.getBoardSet();
 	playerOneTurn = !playerOneTurn;
-	TicTacBoard *ticTacBoard = board.components+m.getBoardSet();
+	gameboard.setPlayerOne.bitsUsed ^= m.getWonBoardPOne();
+	gameboard.setPlayerTwo.bitsUsed ^= m.getWonBoardPTwo();
+	if(TicTacBoard::isWon(gameboard.wonState)){
+		gameboard.wonState ^= ticTacBoard->wonState;
+	}
 	ticTacBoard->wonState = m.getPrevWonState(ticTacBoard->wonState);
-	if(playerOneTurn) ticTacBoard->setPlayerOne.bitsUsed -= m.getFieldSet();
-	else ticTacBoard->setPlayerTwo.bitsUsed -= m.getFieldSet();
-	board.setPlayerOne.bitsUsed -= m.getWonBoardPOne();
-	board.setPlayerTwo.bitsUsed -= m.getWonBoardPTwo();
+	if(playerOneTurn) ticTacBoard->setPlayerOne.bitsUsed ^= m.getFieldSet();
+	else ticTacBoard->setPlayerTwo.bitsUsed ^= m.getFieldSet();
 }
 
 bool GameState::playMove(Move m) {
@@ -71,12 +81,12 @@ bool GameState::isValidMove(Move& m) const {
 
 	//More complex invalid
 	bool valid = true;
-	FieldBits setInTarget = ((const FieldBits)board.components[boardB].setPlayerOne) |
-			((const FieldBits) board.components[boardB].setPlayerTwo);
+	FieldBits setInTarget = ((const FieldBits)gameboard.components[boardB].setPlayerOne) |
+			((const FieldBits) gameboard.components[boardB].setPlayerTwo);
 	valid &= ((fieldB & setInTarget) == 0);  //Is not on top of a set field
 	if(history.empty()){
 		valid &= boardB != 4 || fieldB != 0x10; //not the mid mid field
-		valid &= (winMoves(board.components[boardB].setPlayerOne) & fieldB) == 0; //Not a board win
+		valid &= (winMoves(gameboard.components[boardB].setPlayerOne) & fieldB) == 0; //Not a board win
 	}else{
 		const Move& previousMove = history.top();
 		FieldBits backMove = getFieldOfBoard(previousMove.getBoardSet());
@@ -90,12 +100,12 @@ bool GameState::isValidMove(Move& m) const {
 }
 
 bool GameState::isWon() const{
-	return board.isWon(board.wonState);
+	return gameboard.isWon(gameboard.wonState);
 }
 
 bool GameState::hasWon(bool playerOne) const{
-	if(playerOne) return board.hasPlayerOneWon();
-	else return board.hasPlayerTwoWon();
+	if(playerOne) return gameboard.checkPlayerOneWon();
+	else return gameboard.checkPlayerTwoWon();
 }
 
 bool GameState::isPlayerOneTurn()const{
@@ -182,19 +192,19 @@ InitResult GameState::initializeWithMoves(MoveDescriptor playerOne[9], MoveDescr
 }
 
 int GameState::print() const{
-	return printBigBoard(board, this);
+	return printBigBoard(gameboard, this);
 }
 
 int GameState::sprint(char * dest) const{
-	return sprintBigBoard(dest, board, this);
+	return sprintBigBoard(dest, gameboard, this);
 }
 
 int GameState::print(int index) const{
-	return printBoard(board.components[index], this, index);
+	return printBoard(gameboard.components[index], this, index);
 }
 
 int GameState::sprint(int index, char * dest) const{
-	return sprintBoard(dest, board.components[index], this, index);
+	return sprintBoard(dest, gameboard.components[index], this, index);
 }
 
 void GameState::start() {

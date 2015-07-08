@@ -31,8 +31,8 @@ struct InitResult{
 
 class GameState{
 	friend Searcher;
-	friend float rate(const GameState&);
-	TacTicBoard board;
+	friend signed rate(const GameState&);
+	TacTicBoard gameboard;
 	MoveHistory history;
 	mutable Searcher * searcher;
 	bool playerOneTurn;
@@ -42,7 +42,7 @@ class GameState{
 	 * Applies a move to the board and sets its fields according to the current board state.
 	 */
 	void applyAndChangeMove(Move& m);
-	void _applyMove(Move m); //Convenience, should use this only in init
+	void _applyMove(Move&& m); //Convenience, should use this only in init
 	/**
 	 * Undo the given move (asserts it is correct)
 	 */
@@ -57,7 +57,7 @@ public:
 	/**
 	 * Constructs a game that is in setup phase
 	 */
-	GameState():board(), history(), searcher(0), playerOneTurn(true), inSetup(true){}
+	GameState():gameboard(), history(), searcher(0), playerOneTurn(true), inSetup(true){}
 	GameState(GameState&) = default;
 	GameState(const GameState&) = default;
 	/**

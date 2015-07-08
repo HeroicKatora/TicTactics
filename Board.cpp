@@ -22,25 +22,33 @@ bool BoardField::getStateOfCell(unsigned index) const {
 	return (0x1<<index)&bitsUsed;
 }
 
-bool TicTacBoard::hasPlayerOneWon() const {
-	if(wonState & WONP1) return true;
+bool TicTacBoard::checkPlayerOneWon() const {
+	if(hasPlayerOneWon()) return true;
 	if(wonState == ONLYBOTH) return false;
 	return isWinBoard(setPlayerOne);
 }
 
-bool TicTacBoard::hasPlayerTwoWon() const{
-	if(wonState & WONP2) return true;
+bool TicTacBoard::checkPlayerTwoWon() const{
+	if(hasPlayerTwoWon()) return true;
 	if(wonState == ONLYBOTH) return false;
 	return isWinBoard(setPlayerTwo);
+}
+
+bool TicTacBoard::hasPlayerOneWon() const {
+	return wonState & WONP1;
+}
+
+bool TicTacBoard::hasPlayerTwoWon() const {
+	return wonState & WONP2;
 }
 
 void TicTacBoard::applyMove(bool playerOne, FieldBits field) {
 	if(playerOne){
 		setPlayerOne.bitsUsed |= field;
-		if(hasPlayerOneWon()) wonState |= WONP1;
+		if(checkPlayerOneWon()) wonState |= WONP1;
 	}else{
 		setPlayerTwo.bitsUsed |= field;
-		if(hasPlayerOneWon()) wonState |= WONP2;
+		if(checkPlayerTwoWon()) wonState |= WONP2;
 	}
 }
 

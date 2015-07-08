@@ -75,7 +75,7 @@ Searcher::Searcher(const GameState * state):gameState(state), pause(true),
 
 MoveSuggestion Searcher::getBestKnownMove() const{
 	SearchNode * m = topNode.children;
-	if(!m) return MoveSuggestion{MoveDescriptor{}, nan("")};
+	if(!m) return MoveSuggestion{MoveDescriptor{}, 0};
 	return MoveSuggestion{m->move, m->rating};
 }
 
@@ -228,7 +228,7 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 
 void printBestPath(const SearchNode * node){
 	char buffer [1000];
-	int off = sprintf(buffer, "%f ", node->rating);
+	int off = sprintf(buffer, "%d ", node->rating);
 	for(int i = 0;i<100 && node;i++){
 		off += sprintMove(buffer+off, node->move);
 		off += sprintf(buffer+off, " ");
@@ -293,28 +293,28 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 					break;
 				}
 			}
-			if(depth < maxDepth){
-				//Expand this node
-				current.node->discover(searchState.board);
-			}
 
 			//Search code
 
-			if(depth == maxDepth){
+			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stoßen erhöhen
+				//Expand this node
+				current.node->discover(searchState.gameboard);
+				if(current.childIndex == current.node->childCount){
+					current.node->revalueChildren(searchState.isPlayerOneTurn());
+					if(current.childIndex == 0){
+						finalNodes++;
+						if(current.node->children) strangeNodes++;
+					}
+					load = true;
+				}else{
+					SearchPathNode next = {&current.node->children[current.childIndex]};
+					current.childIndex++;
+					nodesSearched++;
+					in(next);
+				}
+			}else if(depth == maxDepth){
 				current.node->rating = rate(searchState);
 				load = true;
-			}else if(current.childIndex == current.node->childCount){
-				current.node->revalueChildren(searchState.isPlayerOneTurn());
-				if(current.childIndex == 0){
-					finalNodes++;
-					if(current.node->children) strangeNodes++;
-				}
-				load = true;
-			}else{
-				SearchPathNode next = {&current.node->children[current.childIndex]};
-				current.childIndex++;
-				nodesSearched++;
-				in(next);
 			}
 
 			if(maxDuration > 0 && time(NULL)-startTime > maxDuration){
@@ -352,7 +352,7 @@ void SearchNode::close(){
 }
 
 __attribute__((const))
-bool isTwoBetterThan(float one, float two, bool playerOne){
+bool isTwoBetterThan(signed one, signed two, bool playerOne){
 	if(playerOne) return one < two;
 	else return one > two;
 }
@@ -374,7 +374,7 @@ void SearchNode::revalueChildren(bool playerOne){
 }
 
 void SearchNode::setToMaxChild(bool playerOne){
-	rating = static_cast<float>(0xFFFFFFFF);
+	rating = playerOne?Ratings::RATING_P2_GAME:Ratings::RATING_P1_GAME;
 	for(unsigned int i = 0;i<childCount;i++){
 		rating = isTwoBetterThan(rating, children[i].rating, playerOne)?children[i].rating:rating;
 	}

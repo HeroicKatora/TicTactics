@@ -1,5 +1,5 @@
-winP1 = 100
-winP2 = -100
+#winP1 = 100
+#winP2 = -100
 chance_bonus = 15
 more_bonus = 0
 mid_bonus = 4
@@ -61,6 +61,7 @@ def bewerteBoard(setP1, setP2):
     pop1 = popCount(setP1)
     pop2 = popCount(setP2)
     
+    '''
     winP1Bool = False
     winP2Bool = False
     
@@ -80,6 +81,7 @@ def bewerteBoard(setP1, setP2):
     
     if winP2Bool:
         return winP2
+    '''
     
     chancesP1 = 0
     for mask in chancesMasks:
@@ -143,7 +145,7 @@ def popCount(integer):
     return bin(integer).count('1')
 
 file = open("RatingTable.h", 'w')
-file.write("#pragma once\nfloat ratingTable [] = {0\n")
+file.write("#pragma once\nsigned ratingTable [] = {0\n")
 
 summe = 0
 

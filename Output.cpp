@@ -81,7 +81,7 @@ int sprintMove(char* dest, const MoveDescriptor& descriptor) {
 
 int sprintRow(char * dest,const TicTacBoard& board, int row, const GameState * surrGame, int boarInd){
 	int off = 0;
-	bool p1 = board.hasPlayerOneWon(), p2 = board.hasPlayerTwoWon();
+	bool p1 = board.checkPlayerOneWon(), p2 = board.checkPlayerTwoWon();
 	for(int j = 0;j<3;j++){
 		char c = TTTPConst::EMPTY;
 		if(surrGame){
@@ -106,7 +106,7 @@ int sprintRow(char * dest,const TicTacBoard& board, int row, const GameState * s
 				c = TTTPConst::Set3W0;
 			}
 		}else if(board.setPlayerTwo.getStateOfCell(j+row*3)){ //Two has this
-			if(board.hasPlayerTwoWon()){
+			if(board.checkPlayerTwoWon()){
 				c = TTTPConst::Set2W2;
 			}else{
 				c = TTTPConst::Set2WA;

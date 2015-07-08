@@ -19,14 +19,14 @@ class EngineController;
 
 struct MoveSuggestion{
 	MoveDescriptor move;
-	float rating;
+	signed rating;
 };
 
-struct SearchNode{ //If rating = +-inf, win of one player,
+struct SearchNode{ //If rating = +-MAX, win of one player,
 	SearchNode(): rating(),weight(), childCount(0), move{}, children(0){
 	}
-	//if no child nodes and rating != inf, obviously no children are existent
-	float rating;
+	//if no child nodes and rating != MAX, obviously no children are existent
+	signed rating;
 	//Weight of this note, depends on depth and rating relative to others
 	float weight;
 
