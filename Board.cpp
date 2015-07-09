@@ -8,10 +8,10 @@
 #include "WinMoveTable.h"
 
 const BoardField Fields::winBoards [] =
-		{BoardField(0x7u), BoardField(0x38u), BoardField(0x1Cu), 	//waagrecht
-		BoardField(0x49u), BoardField(0xA2u), BoardField(0x124u),	//senkrecht
-		BoardField(0x111u), BoardField(0x54u) };					//diagonal
-const BoardField Fields::fullBoard = BoardField(0x1FF);
+		{BoardField(07), BoardField(070), BoardField(0700), 	//waagrecht
+		BoardField(0111), BoardField(0222), BoardField(0444),	//senkrecht
+		BoardField(0124), BoardField(0421) };					//diagonal
+const BoardField Fields::fullBoard = BoardField(0x777);
 
 BoardField::BoardField(const FieldBits bits):bitsUsed(bits){
 }
@@ -45,12 +45,14 @@ bool BoardField::getStateOfCell(unsigned index) const {
 }
 
 bool TicTacBoard::checkPlayerOneWon() const {
+	if(hasPlayerTwoWon()) return false;
 	if(hasPlayerOneWon()) return true;
 	if(wonState == ONLYBOTH && !((setPlayerOne|setPlayerTwo) == 0x1FF)) return false;
 	return isWinBoard(setPlayerOne);
 }
 
 bool TicTacBoard::checkPlayerTwoWon() const{
+	if(hasPlayerOneWon()) return false;
 	if(hasPlayerTwoWon()) return true;
 	if(wonState == ONLYBOTH && !((setPlayerOne|setPlayerTwo) == 0x1FF)) return false;
 	return isWinBoard(setPlayerTwo);
@@ -68,13 +70,23 @@ bool TicTacBoard::canOnlyBothWin() const {
 	return wonState & ONLYBOTH;
 }
 
-void TicTacBoard::applyMove(bool playerOne, FieldBits field) {
-	if(playerOne){
+void TicTacBoard::applyMove(bool playerOne, FieldBits field, bool triState) {
+	if(triState){
 		setPlayerOne.bitsUsed |= field;
-		if(checkPlayerOneWon()) wonState |= WONP1;
-	}else{
 		setPlayerTwo.bitsUsed |= field;
-		if(checkPlayerTwoWon()) wonState |= WONP2;
+		bool p1 = checkPlayerOneWon();
+		bool p2 = checkPlayerTwoWon();
+		if(p1 && p2) wonState |= WONP1|WONP2;
+		if(p1) wonState |= WONP1;
+		if(p2) wonState |= WONP2;
+	}else{
+		if(playerOne){
+			setPlayerOne.bitsUsed |= field;
+			if(checkPlayerOneWon()) wonState |= WONP1;
+		}else{
+			setPlayerTwo.bitsUsed |= field;
+			if(checkPlayerTwoWon()) wonState |= WONP2;
+		}
 	}
 }
 

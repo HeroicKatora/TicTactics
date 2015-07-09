@@ -69,7 +69,7 @@ struct TicTacBoard{
 
 	FieldBits getBlockedFields() const;
 
-	void applyMove(bool playerOne, FieldBits field);
+	void applyMove(bool playerOne, FieldBits field, bool triState);
 };
 
 /**
