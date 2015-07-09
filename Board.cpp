@@ -13,8 +13,30 @@ const BoardField Fields::winBoards [] =
 		BoardField(0x111u), BoardField(0x54u) };					//diagonal
 const BoardField Fields::fullBoard = BoardField(0x1FF);
 
-
 BoardField::BoardField(const FieldBits bits):bitsUsed(bits){
+}
+
+__attribute__((const))
+bool TicTacBoard::isWon(WonState wonState){
+	return wonState > 1;
+}
+__attribute__((const))
+bool TicTacBoard::hasPlayerOneWon(WonState wonState){
+	return wonState & WONP1;
+}
+
+__attribute__((const))
+bool TicTacBoard::hasPlayerTwoWon(WonState wonState){
+	return wonState & WONP2;
+}
+
+__attribute__((const))
+bool TicTacBoard::canOnlyBothWin(WonState wonState){
+	return wonState & ONLYBOTH;
+}
+
+bool TicTacBoard::isWon() const{
+	return wonState > 1;
 }
 
 bool BoardField::getStateOfCell(unsigned index) const {
@@ -40,6 +62,10 @@ bool TicTacBoard::hasPlayerOneWon() const {
 
 bool TicTacBoard::hasPlayerTwoWon() const {
 	return wonState & WONP2;
+}
+
+bool TicTacBoard::canOnlyBothWin() const {
+	return wonState & ONLYBOTH;
 }
 
 void TicTacBoard::applyMove(bool playerOne, FieldBits field) {

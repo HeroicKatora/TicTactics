@@ -44,22 +44,23 @@ struct MoveDescriptor{
 	}
 };
 
-//64 bit long representing a move made. Does not guarantee for the correctness of the moves
+//Does not guarantee for the correctness of the moves
 struct Move{
 	using WonState = TicTacBoard::WonState;
 	Move(BoardBits board, FieldBits field):
-		prevWonState(0), boardSet(board),
-		fieldSet(field), boardWinOne(0), boardWinTwo(0){}
+		winOccurred(false), boardSet(board),
+		fieldSet(field){}
 	Move(MoveDescriptor description):
 		Move(description.getBoard(), description.getField()){};
-	WonState prevWonState;
+	bool winOccurred;
 	BoardBits boardSet;
 	FieldBits fieldSet;
-	FieldBits boardWinOne;
-	FieldBits boardWinTwo;
+	inline void setWonState(WonState prevWonState, WonState afterMove){
+		winOccurred = afterMove > prevWonState && TicTacBoard::isWon(afterMove);
+	}
 	//Previous win state of the board
 	inline WonState getPrevWonState(WonState afterMove) const{
-		return prevWonState;
+		return hasWinOccurred(afterMove)?afterMove&0x1:afterMove;
 	}
 	inline BoardBits getBoardSet() const{
 		return boardSet;
@@ -67,13 +68,24 @@ struct Move{
 	inline FieldBits getFieldSet() const{
 		return fieldSet;
 	}
+	inline unsigned getBoardIndex() const{
+		return getIndexOfBoard(getBoardSet());
+	}
+	inline unsigned getFieldIndex() const{
+		return getIndexOfField(getFieldSet());
+	}
+	inline bool hasWinOccurred(WonState afterMove) const{
+		return winOccurred;
+	}
 	//Field bits if a board was conquered by P1
-	inline FieldBits getWonBoardPOne() const{
-		return boardWinOne;
+	inline FieldBits getWonBoardPOne(WonState afterMove) const{
+		return (TicTacBoard::hasPlayerOneWon(afterMove) && hasWinOccurred(afterMove))?
+				getFieldOfIndex(getFieldIndex()):0;
 	}
 	//Field bits if a board was conquered by P2
-	inline FieldBits getWonBoardPTwo() const{
-		return boardWinTwo;
+	inline FieldBits getWonBoardPTwo(WonState afterMove) const{
+		return (TicTacBoard::hasPlayerTwoWon(afterMove) && hasWinOccurred(afterMove))?
+				getFieldOfIndex(getFieldIndex()):0;
 	}
 };
 

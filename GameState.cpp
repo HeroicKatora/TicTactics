@@ -13,18 +13,17 @@
 void GameState::applyAndChangeMove(Move& m) {
 	TicTacBoard *ticTacBoard = gameboard.components+getIndexOfBoard(m.getBoardSet());
 
-	m.prevWonState = ticTacBoard->wonState;
+	TicTacBoard::WonState prevWon = ticTacBoard->wonState;
 	ticTacBoard->applyMove(playerOneTurn, m.getFieldSet());
-	if(!TicTacBoard::isWon(m.prevWonState)){
+	m.setWonState(prevWon, ticTacBoard->wonState);
+	if(!TicTacBoard::isWon(prevWon)){
 		//Potential new win
-		BoardBits wonBoard = 0x1 << m.getBoardSet();
+		BoardBits wonBoard = getFieldOfBoard(m.getBoardSet());
 		if(ticTacBoard->hasPlayerOneWon()){
 			gameboard.applyMove(true, wonBoard);
-			m.boardWinOne = wonBoard;
 		}
 		if(ticTacBoard->hasPlayerTwoWon()){
 			gameboard.applyMove(false, wonBoard);
-			m.boardWinTwo = wonBoard;
 		}
 
 	}
@@ -38,8 +37,8 @@ void GameState::_applyMove(Move&& m){
 void GameState::undoMove(Move& m){
 	TicTacBoard *ticTacBoard = gameboard.components+m.getBoardSet();
 	playerOneTurn = !playerOneTurn;
-	gameboard.setPlayerOne.bitsUsed -= m.getWonBoardPOne();
-	gameboard.setPlayerTwo.bitsUsed -= m.getWonBoardPTwo();
+	gameboard.setPlayerOne.bitsUsed -= m.getWonBoardPOne(ticTacBoard->wonState);
+	gameboard.setPlayerTwo.bitsUsed -= m.getWonBoardPTwo(ticTacBoard->wonState);
 	if(TicTacBoard::isWon(gameboard.wonState)){
 		gameboard.wonState ^= ticTacBoard->wonState;
 	}

@@ -44,13 +44,18 @@ struct TicTacBoard{
 	static const WonState WONP2 = 0x4;
 
 	__attribute__((const))
-	static const bool isWon(WonState wonState){
-		return wonState > 1;
-	}
+	static bool isWon(WonState wonState);
 
-	bool isWon() const{
-		return wonState > 1;
-	}
+	__attribute__((const))
+	static bool hasPlayerOneWon(WonState wonState);
+
+	__attribute__((const))
+	static bool hasPlayerTwoWon(WonState wonState);
+
+	__attribute__((const))
+	static bool canOnlyBothWin(WonState wonState);
+
+	bool isWon() const;
 
 	WonState wonState;
 	BoardField setPlayerOne, setPlayerTwo;
@@ -60,6 +65,7 @@ struct TicTacBoard{
 
 	bool hasPlayerOneWon() const;
 	bool hasPlayerTwoWon() const;
+	bool canOnlyBothWin() const;
 
 	FieldBits getBlockedFields() const;
 
