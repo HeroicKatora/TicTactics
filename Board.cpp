@@ -16,33 +16,37 @@ const BoardField Fields::fullBoard = BoardField(0x777);
 BoardField::BoardField(const FieldBits bits):bitsUsed(bits){
 }
 
-__attribute__((const))
+[[gnu::const]]
 bool TicTacBoard::isWon(WonState wonState){
 	return wonState > 1;
 }
-__attribute__((const))
+
+[[gnu::const]]
 bool TicTacBoard::hasPlayerOneWon(WonState wonState){
 	return wonState & WONP1;
 }
 
-__attribute__((const))
+[[gnu::const]]
 bool TicTacBoard::hasPlayerTwoWon(WonState wonState){
 	return wonState & WONP2;
 }
 
-__attribute__((const))
+[[gnu::const]]
 bool TicTacBoard::canOnlyBothWin(WonState wonState){
 	return wonState & ONLYBOTH;
 }
 
+[[gnu::const]]
 bool TicTacBoard::isWon() const{
 	return wonState > 1;
 }
 
+[[gnu::const]]
 bool BoardField::getStateOfCell(unsigned index) const {
 	if(index > 8) return false;
 	return (0x1<<index)&bitsUsed;
 }
+
 
 bool TicTacBoard::checkPlayerOneWon() const {
 	if(hasPlayerTwoWon()) return false;
@@ -58,14 +62,17 @@ bool TicTacBoard::checkPlayerTwoWon() const{
 	return isWinBoard(setPlayerTwo);
 }
 
+[[gnu::const]]
 bool TicTacBoard::hasPlayerOneWon() const {
 	return wonState & WONP1;
 }
 
+[[gnu::const]]
 bool TicTacBoard::hasPlayerTwoWon() const {
 	return wonState & WONP2;
 }
 
+[[gnu::const]]
 bool TicTacBoard::canOnlyBothWin() const {
 	return wonState & ONLYBOTH;
 }
@@ -90,14 +97,17 @@ void TicTacBoard::applyMove(bool playerOne, FieldBits field, bool triState) {
 	}
 }
 
+[[gnu::const]]
 BoardField BoardField::operator &(const BoardField& other) const {
 	return BoardField(bitsUsed&other.bitsUsed);
 }
 
+[[gnu::const]]
 BoardField BoardField::operator |(const BoardField& other) const {
 	return BoardField(bitsUsed|other.bitsUsed);
 }
 
+[[gnu::const]]
 bool BoardField::operator ==(const BoardField& other) const {
 	return bitsUsed == other.bitsUsed;
 }
@@ -105,19 +115,17 @@ bool BoardField::operator ==(const BoardField& other) const {
 BoardField::BoardField() :bitsUsed((FieldBits) 0){
 }
 
+[[gnu::const]]
 FieldBits TicTacBoard::getBlockedFields() const{
 	return (FieldBits)(setPlayerOne|setPlayerTwo);
 }
 
-__attribute__((const))
+[[gnu::pure]]
 bool isWinBoard(const BoardField field){
-	for(int i = 0;i<8;i++){
-		if((field & Fields::winBoards[i])==Fields::winBoards[i]) return true;
-	}
-	return false;
+	return winsTable[field.bitsUsed];
 }
 
-__attribute__((const))
+[[gnu::pure]]
 FieldBits winMoves(BoardField set){
 	return winMoveTable[(FieldBits) set];
 }

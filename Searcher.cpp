@@ -49,12 +49,11 @@
  * We can use g = log d
  * And n = node.weigth * log d
  */
-__attribute__((const))
+[[gnu::const]]
 float functionN(unsigned depth){
-	return (float) 10e9;
+	return (float) 10e7;
 }
 
-__attribute__((pure))
 unsigned getWeightedMaxChildNumber(float weight, unsigned depth){
 	//We use caching since that is O(c), while the function n might not be
 	static std::vector<float> calculationResults {};
@@ -86,15 +85,38 @@ void Searcher::runParallel() {
 }
 
 void Searcher::notifyUndo(Move& move) {
-
+	endParallel();
+	topNode.childCount = 0;
+	topNode.close();
+	topNode.move = move;
+	topNode.rating = 0;
+	topNode.weight = 1;
 }
 
 void Searcher::notifyMoveMade(Move& move) {
-	topNode.move = move;
-	topNode.childCount = 0;
-	topNode.close();
-	topNode.rating = 0;
+	bool pauseAfter = pause;
+	//setPause(true);
+	endParallel();
+	SearchNode *newNode = NULL;
+	for(unsigned i = 0;topNode.children && i<topNode.childCount;i++){
+		if(topNode.children[i].move == move){
+			newNode = topNode.children+i;
+		}else{
+			topNode.children[i].close();
+		}
+	}
+	if(newNode){
+		auto ptr = topNode.children;
+		topNode = *newNode;
+		delete(ptr);
+	}else{
+		topNode.move = move;
+		topNode.childCount = 0;
+		topNode.close();
+		topNode.rating = 0;
+	}
 	topNode.weight = 1;
+	setPause(pauseAfter);
 }
 
 void Searcher::setPause(bool pauseNow) {
@@ -120,7 +142,7 @@ void Searcher::endParallel() {
 /**
  * Counts the moves that are possible on a board without considering any limitations
  */
-__attribute__((const))
+[[gnu::const]]
 size_t countPossibleMoves(const TicTacBoard& board, FieldBits forbidden){
 	return 9-__builtin_popcount((FieldBits) (board.setPlayerOne| board.setPlayerTwo) | forbidden);
 }
@@ -128,14 +150,14 @@ size_t countPossibleMoves(const TicTacBoard& board, FieldBits forbidden){
 /**
  * Counts the possible moves that do not win the board
  */
-__attribute__((const))
+[[gnu::const]]
 size_t countNonWinMoves(const TicTacBoard& board){
 	FieldBits set = board.getBlockedFields();
 	set |= winMoves(board.setPlayerOne);
 	return 9-__builtin_popcount(set);
 }
 
-__attribute__((const))
+[[gnu::const]]
 size_t countBeginMoves(const TacTicBoard& state){
 	size_t moves = 0;
 	for(int i = 0;i<9;i++){
@@ -147,6 +169,7 @@ size_t countBeginMoves(const TacTicBoard& state){
 /**
  * Returns positive values if the moves are on the board and negative if not
  */
+[[gnu::const]]
 signed countPlayMoves(const TacTicBoard& state, const Move& oldMove){
 	size_t backIndex = oldMove.getBoardIndex();
 	size_t index = oldMove.getFieldIndex();
@@ -162,11 +185,8 @@ signed countPlayMoves(const TacTicBoard& state, const Move& oldMove){
 	return allExcept?-moves:moves;
 }
 
-static size_t wonStates = 0;
-
 size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& oldMove) {
 	if(state.isWon()){
-		wonStates++;
 		dest = NULL;
 		return 0;
 	}
@@ -244,12 +264,16 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 
 void printBestPath(const SearchNode * node){
 	char buffer [1000];
-	int off = sprintf(buffer, "%d ", node->rating);
+	int off = sprintf(buffer, "%10s ", "");
+	signed nodeRating = 0;
 	for(int i = 0;i<100 && node;i++){
 		off += sprintMove(buffer+off, node->move);
 		off += sprintf(buffer+off, " ");
+		nodeRating = node->rating;
 		node = node->children;
 	}
+	snprintf(buffer, 1000, "%-10i", nodeRating);
+	buffer[10] = ' ';
 	printChannel(TTTPConst::channelEngine, buffer);
 }
 
@@ -298,7 +322,6 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 		depth = 0;
 		printOut(":Search depth %u:", maxDepth);
 		size_t nodesSearched = 0;
-		size_t strangeNodes = 0;
 		size_t finalNodes = 0;
 		time_t timeStart = time(NULL);
 		while(!end){
@@ -318,7 +341,6 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 					current.node->revalueChildren(searchState.isPlayerOneTurn());
 					if(current.childIndex == 0){
 						finalNodes++;
-						if(current.node->children) strangeNodes++;
 					}
 					load = true;
 				}else{
@@ -337,17 +359,16 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 				end = true;
 			}
 
-			//Makes the thread pause until pauseMutex is available
-			if(!end){
+			if(!end && pause){
+				//Makes the thread pause until pauseMutex is available
 				pauseMutex.lock();
 				pauseMutex.unlock();
 			}
 		}
 		current.childIndex = 0;
 		printBestPath(startNode->children);
-		printInfo("Searched: %u Strange %u Final %u, Time: %u, Won states %u",
-				nodesSearched, strangeNodes, finalNodes, time(NULL)-timeStart, wonStates);
-		wonStates = 0;
+		printInfo("Searched: %u Final %u, Time: %u",
+				nodesSearched, finalNodes, time(NULL)-timeStart);
 	}
 }
 
@@ -366,13 +387,13 @@ void SearchNode::close(){
 	childCount = 0;
 }
 
-__attribute__((const))
+[[gnu::const]]
 bool isTwoBetterThan(signed one, signed two, bool playerOne){
 	if(playerOne) return one < two;
 	else return one > two;
 }
 
-__attribute__((const))
+[[gnu::const]]
 bool isTwoBetterThanNode(const SearchNode& one, const SearchNode& two, bool playerOne){
 	return isTwoBetterThan(one.rating, two.rating, playerOne);
 }

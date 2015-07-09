@@ -92,6 +92,7 @@ void GameState::undoMove() {
 	history.pop();
 }
 
+[[gnu::const]]
 bool GameState::isValidMove(Move& m) const {
 	//Trivial invalid
 	BoardBits boardB = m.getBoardSet();
@@ -120,15 +121,18 @@ bool GameState::isValidMove(Move& m) const {
 	return valid;
 }
 
+[[gnu::const]]
 bool GameState::isWon() const{
 	return gameboard.isWon(gameboard.wonState);
 }
 
+[[gnu::const]]
 bool GameState::hasWon(bool playerOne) const{
 	if(playerOne) return gameboard.checkPlayerOneWon();
 	else return gameboard.checkPlayerTwoWon();
 }
 
+[[gnu::const]]
 bool GameState::isPlayerOneTurn()const{
 	return playerOneTurn;
 }

@@ -166,7 +166,7 @@ file = open("WinMoveTable.h", 'w')
 file.write("//This file is used to look up which moves could win a board in a certain situation\n")
 file.write("//Winning moves are moves, after which the player has a tic tac toe\n")
 file.write("//Therefore this does not check if the tic tac toe existed before (subject to change)")
-file.write("#include \"types.hpp\"\n __attribute__((hot)) FieldBits winMoveTable [] = {0\n")
+file.write("#include \"types.hpp\"\n[[gnu::hot]] FieldBits winMoveTable [] = {0\n")
 
 for set in range(2**9):
 	if not set:
@@ -183,6 +183,20 @@ for set in range(2**9):
 		if winMove:
 			moves += tryMove
 	file.write(","+str(moves)+"\n")
+
+file.write("};\n")
+
+file.write("[[gnu::hot]] bool winsTable[] = {0,")
+
+for set in range(2**9):
+	if not set:
+		continue
+	for mask in winsMasks:
+		if (set & mask) == mask:
+			file.write("1,\n")
+			break
+	else:
+		file.write("0,\n")
 
 file.write("};\n")
 file.close();
