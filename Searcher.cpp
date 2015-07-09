@@ -192,6 +192,10 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 				moves &= (moves-1);
 			}
 		}
+		if(nodeIndex != (unsigned)count){
+			printMove(oldMove);
+			printBigBoard(state);
+		}
 	}else{
 		count = countPlayMoves(state, oldMove);
 		if(count == 0){
@@ -207,7 +211,7 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 		FieldBits backField = getFieldOfIndex(oldMove.getBoardIndex());
 		if(__builtin_expect(fullBoard, false)){
 			for(unsigned i = 0;i<9;i++){
-				if(i == oldMove.getBoardIndex()) continue;
+				if(i == oldMove.getFieldIndex()) continue;
 				FieldBits nonMoves = state.components[i].getBlockedFields();
 				nonMoves |= backField;
 				FieldBits moves = invertField(nonMoves);
@@ -217,6 +221,10 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 					moves &= (moves-1);
 				}
 			}
+			if(nodeIndex != (unsigned)count){
+				printMove(oldMove);
+				printBigBoard(state);
+			}
 		}else{
 			FieldBits nonMoves = state.components[intoIndex].getBlockedFields();
 			nonMoves |= backField;
@@ -225,6 +233,10 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDesc
 				dest[nodeIndex].move = {getBoardOfIndex(intoIndex), (FieldBits)(moves&(~moves+1))};
 				nodeIndex++;
 				moves &= (moves-1);
+			}
+			if(nodeIndex != (unsigned)count){
+				printMove(oldMove);
+				printBigBoard(state);
 			}
 		}
 	}
@@ -301,7 +313,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 
 			//Search code
 
-			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stoßen erhöhen
+			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stoï¿½en erhï¿½hen
 				//Expand this node
 				current.node->discover(searchState.gameboard);
 				if(current.childIndex == current.node->childCount){
