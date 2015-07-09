@@ -31,7 +31,7 @@ struct SearchNode{ //If rating = +-MAX, win of one player,
 	float weight;
 
 	unsigned childCount;
-	MoveDescriptor move;
+	Move move;
 	SearchNode *children;
 
 	/**

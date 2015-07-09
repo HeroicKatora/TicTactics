@@ -14,10 +14,12 @@ signed Ratings::RATING_P2_WON = -100;
 signed Ratings::RATING_P1_GAME = std::numeric_limits<signed>::max();
 signed Ratings::RATING_P2_GAME = std::numeric_limits<signed>::min();
 
+[[gnu::hot, gnu::pure]]
 signed rate(const GameState& state){
 	return rate(state.gameboard);
 }
 
+[[gnu::hot, gnu::pure]]
 signed rate(const TicTacBoard& board){
 	if(board.isWon()){
 		bool p1 = board.hasPlayerOneWon() && !board.hasPlayerTwoWon();
@@ -30,6 +32,7 @@ signed rate(const TicTacBoard& board){
 	return ratingTable[index];
 }
 
+[[gnu::hot, gnu::pure]]
 signed rate(const TacTicBoard& board){
 	if(board.isWon()){
 		bool p1 = board.hasPlayerOneWon() && !board.hasPlayerTwoWon();

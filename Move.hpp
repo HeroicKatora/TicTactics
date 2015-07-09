@@ -45,18 +45,19 @@ struct MoveDescriptor{
 };
 
 //Does not guarantee for the correctness of the moves
-struct Move{
+struct [[gnu::packed]] Move{
 	using WonState = TicTacBoard::WonState;
+
+	Move():winOccurred(false), onlyBothOccurred(false),set(~0){};
 	Move(BoardBits board, FieldBits field):// prev(),
 		winOccurred(false), onlyBothOccurred(false),
-		boardSet(board), fieldSet(field){}
+		set((getIndexOfBoard(board)<<4)+getIndexOfField(field)){}
 	Move(MoveDescriptor description):
 		Move(description.getBoard(), description.getField()){};
 	//WonState prev;
 	bool winOccurred;
 	bool onlyBothOccurred;
-	BoardBits boardSet;
-	FieldBits fieldSet;
+	std::uint8_t set;
 	inline void setWonState(WonState prevWonState, WonState afterMove){
 		winOccurred = !TicTacBoard::isWon(prevWonState) && TicTacBoard::isWon(afterMove);
 		onlyBothOccurred = afterMove > 0 && prevWonState == 0;
@@ -67,17 +68,20 @@ struct Move{
 		prev = hasOnlyBothOccurred(afterMove)?0:prev;
 		return prev;
 	}
+	inline void setIndices(unsigned boardIndex, unsigned fieldIndex){
+		set = (boardIndex<<4)+fieldIndex;
+	}
 	inline BoardBits getBoardSet() const{
-		return boardSet;
+		return getBoardOfIndex(getBoardIndex());
 	}
 	inline FieldBits getFieldSet() const{
-		return fieldSet;
+		return getFieldOfIndex(getFieldIndex());
 	}
 	inline unsigned getBoardIndex() const{
-		return getIndexOfBoard(getBoardSet());
+		return set >> 4;
 	}
 	inline unsigned getFieldIndex() const{
-		return getIndexOfField(getFieldSet());
+		return set & 0xF;
 	}
 	inline bool hasWinOccurred(WonState afterMove) const{
 		return winOccurred;
@@ -95,7 +99,10 @@ struct Move{
 		return (TicTacBoard::hasPlayerTwoWon(afterMove) && hasWinOccurred(afterMove))?
 				getFieldOfIndex(getBoardIndex()):0;
 	}
-};
+	bool isInvalidDefault() const{
+		return set == ~0;
+	}
+} ;
 
 class MoveHistory:public std::stack<Move>{
 };

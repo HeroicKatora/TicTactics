@@ -10,6 +10,7 @@
 #include <popcntintrin.h>
 #include "Output.hpp"
 
+[[gnu::hot]]
 void GameState::applyAndChangeMove(Move& m) {
 	TicTacBoard *ticTacBoard = gameboard.components+getIndexOfBoard(m.getBoardSet());
 
@@ -54,7 +55,8 @@ void GameState::_applyMove(Move&& m){
 	applyAndChangeMove(m);
 }
 
-void GameState::undoMove(Move& m){
+[[gnu::hot]]
+void GameState::undoMove(Move& m) {
 	TicTacBoard *ticTacBoard = gameboard.components+m.getBoardSet();
 	playerOneTurn = !playerOneTurn;
 	gameboard.setPlayerOne.bitsUsed -= m.getWonBoardPOne(ticTacBoard->wonState);
@@ -131,6 +133,7 @@ bool GameState::isPlayerOneTurn()const{
 	return playerOneTurn;
 }
 
+[[gnu::const]]
 unsigned isIn(MoveDescriptor m, MoveDescriptor playerMoves [9]){
 	unsigned count = 0;
 	for(int i = 0;i<9;i++){
@@ -139,6 +142,7 @@ unsigned isIn(MoveDescriptor m, MoveDescriptor playerMoves [9]){
 	return count;
 }
 
+[[gnu::const]]
 InitResult GameState::checkSingleValidity(MoveDescriptor playerMoves[9]){
 	InitResult result{};
 	result.type = PASSED;

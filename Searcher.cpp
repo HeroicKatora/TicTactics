@@ -51,7 +51,7 @@
  */
 __attribute__((const))
 float functionN(unsigned depth){
-	return (float) depth * 1000;
+	return (float) 10e9;
 }
 
 __attribute__((pure))
@@ -76,13 +76,13 @@ Searcher::Searcher(const GameState * state):gameState(state), pause(true),
 MoveSuggestion Searcher::getBestKnownMove() const{
 	SearchNode * m = topNode.children;
 	if(!m) return MoveSuggestion{MoveDescriptor{}, 0};
-	return MoveSuggestion{m->move, m->rating};
+	return MoveSuggestion{{m->move.getBoardSet(), m->move.getFieldSet()}, m->rating};
 }
 
 void Searcher::runParallel() {
-	/*end = false;
+	end = false;
 	searchThread = std::thread(std::bind(startSearch, this, &topNode, 0, 0));
-	searchThread.detach();*/ // Disabled for now
+	searchThread.detach();
 }
 
 void Searcher::notifyUndo(Move& move) {
@@ -90,10 +90,9 @@ void Searcher::notifyUndo(Move& move) {
 }
 
 void Searcher::notifyMoveMade(Move& move) {
-	topNode.move = {move.getBoardSet(), move.getFieldSet()};
+	topNode.move = move;
 	topNode.childCount = 0;
-	delete(topNode.children);
-	topNode.children = NULL;
+	topNode.close();
 	topNode.rating = 0;
 	topNode.weight = 1;
 }
@@ -148,7 +147,7 @@ size_t countBeginMoves(const TacTicBoard& state){
 /**
  * Returns positive values if the moves are on the board and negative if not
  */
-signed countPlayMoves(const TacTicBoard& state, const MoveDescriptor& oldMove){
+signed countPlayMoves(const TacTicBoard& state, const Move& oldMove){
 	size_t backIndex = oldMove.getBoardIndex();
 	size_t index = oldMove.getFieldIndex();
 	size_t moves = countPossibleMoves(state.components[index], getFieldOfIndex(backIndex));
@@ -165,7 +164,7 @@ signed countPlayMoves(const TacTicBoard& state, const MoveDescriptor& oldMove){
 
 static size_t wonStates = 0;
 
-size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const MoveDescriptor& oldMove) {
+size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& oldMove) {
 	if(state.isWon()){
 		wonStates++;
 		dest = NULL;
@@ -262,11 +261,10 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 	GameState searchState = *gameState;
 	struct SearchPathNode{
 		SearchPathNode(SearchNode *node):node(node),
-				childIndex(0), moveMade(node->move){
+				childIndex(0){
 		}
 		SearchNode *node;
 		unsigned childIndex;
-		Move moveMade;
 	};
 
 	unsigned maxDepth = 1, depth = 0;
@@ -277,7 +275,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 			for(unsigned i = retain;i<current.node->childCount;i++){
 				current.node->children[i].close();
 			}
-			searchState.undoMove(current.moveMade);
+			searchState.undoMove(current.node->move);
 			current = nodePath.top();
 			nodePath.pop();
 			depth--;
@@ -290,7 +288,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 	auto in = [&](SearchPathNode& newNode){
 		nodePath.push(current);
 		current = newNode;
-		searchState.applyAndChangeMove(current.moveMade);
+		searchState.applyAndChangeMove(current.node->move);
 		current.node->rating = rate(searchState);
 		depth++;
 	};
