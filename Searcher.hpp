@@ -19,14 +19,14 @@ class EngineController;
 
 struct MoveSuggestion{
 	MoveDescriptor move;
-	signed rating;
+	Rating rating;
 };
 
 struct SearchNode{ //If rating = +-MAX, win of one player,
 	SearchNode(): rating(),weight(), childCount(0), move{}, children(0){
 	}
 	//if no child nodes and rating != MAX, obviously no children are existent
-	signed rating;
+	Rating rating;
 	//Weight of this note, depends on depth and rating relative to others
 	float weight;
 
@@ -48,6 +48,7 @@ struct SearchNode{ //If rating = +-MAX, win of one player,
 	 * Then it sets its rating to the maximum
 	 */
 	void revalueChildren(bool playerOne);
+	void revalueChildren(bool playerOne, unsigned maxIndex);
 	/**
 	 * Only sets the rating to the maximum in its children
 	 */

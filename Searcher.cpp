@@ -284,24 +284,30 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 	time_t startTime = time(NULL);
 	GameState searchState = *gameState;
 	struct SearchPathNode{
-		SearchPathNode(SearchNode *node):node(node),
-				childIndex(0){
+		SearchPathNode(SearchNode *node, Rating marginAlpha, Rating marginBeta):node(node),
+				childIndex(0), marginAlpha(marginAlpha), marginBeta(marginBeta)
+		{
 		}
 		SearchNode *node;
 		unsigned childIndex;
+		Rating marginAlpha; //If max possible rating (from turn players perspective) is better than alpha, skip this node
+		Rating marginBeta; //Max possible rating of all nodes that were already viewed, used as new marginAlpha one depth further
 	};
 
 	unsigned maxDepth = 1, depth = 0;
 	std::stack<SearchPathNode> nodePath{};
-	SearchPathNode current{startNode};
+	SearchPathNode current{startNode, maxRating(gameState->isPlayerOneTurn()), minRating(gameState->isPlayerOneTurn())};
 	auto out = [&](unsigned retain){
 		if(nodePath.size()){
+			Rating newRating = current.node->rating;
 			for(unsigned i = retain;i<current.node->childCount;i++){
 				current.node->children[i].close();
 			}
 			searchState.undoMove(current.node->move);
 			current = nodePath.top();
 			nodePath.pop();
+			current.marginBeta = isOneBetterThan(current.marginBeta, newRating, searchState.isPlayerOneTurn())?current.marginBeta:newRating;
+			current.childIndex++;
 			depth--;
 			return false;
 		}else{
@@ -344,10 +350,15 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 					}
 					load = true;
 				}else{
-					SearchPathNode next = {&current.node->children[current.childIndex]};
-					current.childIndex++;
-					nodesSearched++;
-					in(next);
+					if(isOneBetterThan(current.marginBeta, current.marginAlpha, searchState.isPlayerOneTurn())){
+						current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex-1);
+						load = true;
+					}else{
+						SearchPathNode next = {&current.node->children[current.childIndex],
+								current.marginBeta, minRating(!searchState.isPlayerOneTurn())};
+						nodesSearched++;
+						in(next);
+					}
 				}
 			}else if(depth == maxDepth){
 				current.node->rating = rate(searchState);
@@ -388,21 +399,20 @@ void SearchNode::close(){
 }
 
 [[gnu::const]]
-bool isTwoBetterThan(signed one, signed two, bool playerOne){
-	if(playerOne) return one < two;
-	else return one > two;
-}
-
-[[gnu::const]]
-bool isTwoBetterThanNode(const SearchNode& one, const SearchNode& two, bool playerOne){
-	return isTwoBetterThan(one.rating, two.rating, playerOne);
+bool isOneBetterThanNode(const SearchNode& one, const SearchNode& two, bool playerOne){
+	return isOneBetterThan(one.rating, two.rating, playerOne);
 }
 
 void SearchNode::revalueChildren(bool playerOne){
+	revalueChildren(playerOne, childCount);
+}
+
+void SearchNode::revalueChildren(bool playerOne, unsigned maxChilds){
 	if(!children) return;
-	std::stable_sort(children, children+childCount-1, std::bind(isTwoBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
+	maxChilds = std::max(maxChilds, childCount);
+	std::stable_sort(children, children+maxChilds-1, std::bind(isOneBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
 	float chweight = weight;
-	for(unsigned i = 0;i<childCount;i++){
+	for(unsigned i = 0;i<maxChilds;i++){
 		chweight /= 2;
 		children[i].weight = chweight;
 	}
@@ -412,6 +422,6 @@ void SearchNode::revalueChildren(bool playerOne){
 void SearchNode::setToMaxChild(bool playerOne){
 	rating = playerOne?Ratings::RATING_P2_GAME:Ratings::RATING_P1_GAME;
 	for(unsigned int i = 0;i<childCount;i++){
-		rating = isTwoBetterThan(rating, children[i].rating, playerOne)?children[i].rating:rating;
+		rating = isOneBetterThan(rating, children[i].rating, playerOne)?children[i].rating:rating;
 	}
 }

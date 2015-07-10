@@ -13,6 +13,8 @@ typedef unsigned short FieldBits;
 //0..8, index of board
 typedef unsigned short BoardBits;
 
+typedef signed Rating;
+
 static const FieldBits MID_FIELD = 0x10;
 
 [[gnu::const]]
