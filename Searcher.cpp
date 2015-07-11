@@ -309,6 +309,9 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 				current.node->children[i].close();
 			}
 			searchState.undoMove(current.node->move);
+			char s[4];
+            sprintMove(s, current.node->move);
+            printOut("Undone move %s", s);
 			searchState.print();
 			current = nodePath.top();
 			nodePath.pop();
@@ -325,6 +328,9 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 		nodePath.push(current);
 		current = newNode;
 		searchState.applyAndChangeMove(current.node->move);
+		char s[4];
+        sprintMove(s, current.node->move);
+        printOut("Done move %s", s);
 		searchState.print();
 		depth++;
 	};
