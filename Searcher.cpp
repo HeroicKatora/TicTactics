@@ -300,13 +300,20 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 	auto out = [&](unsigned retain){
 		if(nodePath.size()){
 			Rating newRating = current.node->rating;
+			if(newRating == 31){
+				char s[4];
+                sprintMove(s, current.node->move);
+				printOut("We have a new Rating of 31, the devil is near %s %d %d %u", s, current.marginBeta, current.marginAlpha, depth);
+			}
 			for(unsigned i = retain;i<current.node->childCount;i++){
 				current.node->children[i].close();
 			}
 			searchState.undoMove(current.node->move);
+			searchState.print();
 			current = nodePath.top();
 			nodePath.pop();
 			current.marginBeta = isOneBetterThan(current.marginBeta, newRating, searchState.isPlayerOneTurn())?current.marginBeta:newRating;
+			current.childIndex++;
 			depth--;
 			return false;
 		}else{
@@ -318,9 +325,10 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 		nodePath.push(current);
 		current = newNode;
 		searchState.applyAndChangeMove(current.node->move);
-		current.node->rating = rate(searchState);
+		searchState.print();
 		depth++;
 	};
+
 	printInfo("Started searching");
 	bool load = false;
 	for(;!end && (maximalDepth <= 0 || maxDepth < maximalDepth);maxDepth++){
@@ -328,6 +336,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 		printOut(":Search depth %u:", maxDepth);
 		size_t nodesSearched = 0;
 		size_t finalNodes = 0;
+		size_t cutsMade = 0;
 		time_t timeStart = time(NULL);
 		while(!end){
 			if(load){
@@ -339,7 +348,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 
 			//Search code
 
-			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Sto�en erh�hen
+			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stossen erhoehen
 				//Expand this node
 				current.node->discover(searchState.gameboard);
 				if(current.childIndex == current.node->childCount){
@@ -349,14 +358,20 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 					}
 					load = true;
 				}else{
-					if(isOneBetterThan(current.marginBeta, current.marginAlpha, searchState.isPlayerOneTurn())){
+					char s[4];
+                    sprintMove(s, current.node->move);
+                    printOut("Move: %s Beta: %d  Alpha %d  Depth %u",s , current.marginBeta, current.marginAlpha, depth);
+					if(compare(current.marginBeta, current.marginAlpha, searchState.isPlayerOneTurn(), std::bind(std::greater_equal<Rating>(),
+							std::placeholders::_1, std::placeholders::_2))){
 						current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
+						cutsMade++;
+						sprintMove(s, current.node->children[0].move);
+						printOut("Cut made because of %s", s);
 						load = true;
 					}else{
 						SearchPathNode next = {&current.node->children[current.childIndex],
-								current.marginBeta, minRating(!searchState.isPlayerOneTurn())};
+								current.marginBeta, maxRating(searchState.isPlayerOneTurn())};
 						nodesSearched++;
-						current.childIndex++;
 						in(next);
 					}
 				}
@@ -377,9 +392,11 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 			}
 		}
 		current.childIndex = 0;
+		current.marginAlpha = maxRating(searchState.isPlayerOneTurn());
+		current.marginBeta = minRating(searchState.isPlayerOneTurn());
 		printBestPath(startNode->children);
-		printInfo("Searched: %u Final %u, Time: %u",
-				nodesSearched, finalNodes, time(NULL)-timeStart);
+		printInfo("Searched: %u Final %u, Time: %u, Cuts: %u",
+				nodesSearched, finalNodes, time(NULL)-timeStart, cutsMade);
 	}
 }
 
@@ -420,8 +437,12 @@ void SearchNode::revalueChildren(bool playerOne, unsigned maxChilds){
 }
 
 void SearchNode::setToMaxChild(bool playerOne){
-	rating = playerOne?Ratings::RATING_P2_GAME:Ratings::RATING_P1_GAME;
+	rating = minRating(playerOne);
 	for(unsigned int i = 0;i<childCount;i++){
 		rating = isOneBetterThan(rating, children[i].rating, playerOne)?children[i].rating:rating;
 	}
+}
+
+void Searcher::eval(){
+	printOut("Board evaluation: %d", rate(*gameState));
 }

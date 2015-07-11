@@ -102,6 +102,8 @@ void gameLoop(){
 		goToNextLine();
 		if(matches(line, reg::move)){
 			playMove();
+		}else if(matches(line, "Undo")){
+			state.undoMove();
 		}else if(engineOp()){
 		}else if(matches(line, reg::printReq)){
 			printReq();

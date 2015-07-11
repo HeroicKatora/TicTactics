@@ -83,6 +83,8 @@ public:
 	void setPause(bool pause);
 
 	void endParallel();
+
+	void eval();
 };
 
 /**

@@ -51,3 +51,8 @@ bool isOneBetterThan(Rating one, Rating two, bool playerOne){
 	else return one > two;
 }
 
+bool compare(Rating one, Rating two, bool playerOne, const std::function<bool(Rating, Rating)>& f){
+	if(playerOne) return f(one, two);
+	return f(two, one);
+}
+

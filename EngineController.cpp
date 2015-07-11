@@ -25,6 +25,8 @@ bool EngineController::notifyLine(const char* line) {
 		controlledSearcher.setPause(true);
 	}else if(matches(line, "Unpause")){
 		controlledSearcher.setPause(false);
+	}else if(matches(line, "Rate")){
+		controlledSearcher.eval();
 	}else{
 		return false;
 	}

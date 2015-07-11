@@ -6,6 +6,7 @@
  */
 #pragma once
 #include "types.hpp"
+#include <functional>
 
 struct Ratings{
 	static Rating RATING_P1_WON;
@@ -31,3 +32,5 @@ inline Rating maxRating(bool playerOne){
 	return playerOne?Ratings::RATING_P1_GAME:Ratings::RATING_P2_GAME;
 }
 bool isOneBetterThan(Rating one, Rating two, bool playerOne);
+
+bool compare(Rating one, Rating two, bool playerOne, const std::function<bool(Rating, Rating)>& f);
