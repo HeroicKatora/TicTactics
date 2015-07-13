@@ -165,23 +165,34 @@ size_t countBeginMoves(const TacTicBoard& state){
 	return moves-1; //Minus the middle move since that is guaranteed to be open
 }
 
+struct Movecount{
+	size_t moves;
+	enum Type{
+		Normal,
+		Back,
+		Out
+	};
+	Type type;
+};
 /**
  * Returns positive values if the moves are on the board and negative if not
  */
 [[gnu::const]]
-signed countPlayMoves(const TacTicBoard& state, const Move& oldMove){
+Movecount countPlayMoves(const TacTicBoard& state, const Move& oldMove){
 	size_t backIndex = oldMove.getBoardIndex();
 	size_t index = oldMove.getFieldIndex();
 	size_t moves = countPossibleMoves(state.components[index], getFieldOfIndex(backIndex));
-	bool allExcept = false;
-	if(moves == 0){
-		allExcept = true;
+	size_t moveWBack = countPossibleMoves(state.components[index], 0);
+	if(moveWBack == 0){
 		for(size_t i = 0;i<9;i++){
 			if(i == index) continue;
 			moves += countPossibleMoves(state.components[i], getFieldOfIndex(backIndex));
 		}
+		return {moves, Movecount::Out};
+	}else if(moves == 0){
+		return {1, Movecount::Back};
 	}
-	return allExcept?-moves:moves;
+	return {moves, Movecount::Normal};
 }
 
 size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& oldMove) {
@@ -189,15 +200,10 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 		dest = NULL;
 		return 0;
 	}
-	signed count;
 	size_t nodeIndex = 0;
 	if(oldMove.isInvalidDefault()){
 		//This means we are on the first more after init
-		count = countBeginMoves(state);
-		if(count == 0){
-			dest = NULL;
-			return 0;
-		}
+		signed count = countBeginMoves(state);
 		dest = new SearchNode[count];
 		for(int i = 0;i<9;i++){
 			FieldBits nonMoves = state.components[i].getBlockedFields();
@@ -210,24 +216,29 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 				moves &= (moves-1);
 			}
 		}
-		if(nodeIndex != (unsigned)count){
-			printMove(oldMove);
-			printBigBoard(state);
-		}
+		return count;
 	}else{
-		count = countPlayMoves(state, oldMove);
+		Movecount mCount = countPlayMoves(state, oldMove);
+		signed count = mCount.moves;
 		if(count == 0){
 			dest = NULL;
 			return 0;
 		}
-		bool fullBoard = count < 0;
-		if(__builtin_expect(fullBoard, false)){
-			count = -count;
-		}
 		dest = new SearchNode[count];
 		size_t intoIndex = oldMove.getFieldIndex();
 		FieldBits backField = getFieldOfIndex(oldMove.getBoardIndex());
-		if(__builtin_expect(fullBoard, false)){
+		if(__builtin_expect(mCount.type == Movecount::Normal, true)){
+			FieldBits nonMoves = state.components[intoIndex].getBlockedFields();
+			nonMoves |= backField;
+			FieldBits moves = invertField(nonMoves);
+			while(moves){
+				dest[nodeIndex].move = {getBoardOfIndex(intoIndex), (FieldBits)(moves&(~moves+1))};
+				nodeIndex++;
+				moves &= (moves-1);
+			}
+		}else if(__builtin_expect(mCount.type == Movecount::Back, false)){
+			dest[0].move = {getBoardOfIndex(intoIndex), backField};
+		}else{
 			for(unsigned i = 0;i<9;i++){
 				if(i == oldMove.getFieldIndex()) continue;
 				FieldBits nonMoves = state.components[i].getBlockedFields();
@@ -239,26 +250,9 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 					moves &= (moves-1);
 				}
 			}
-			if(nodeIndex != (unsigned)count){
-				printMove(oldMove);
-				printBigBoard(state);
-			}
-		}else{
-			FieldBits nonMoves = state.components[intoIndex].getBlockedFields();
-			nonMoves |= backField;
-			FieldBits moves = invertField(nonMoves);
-			while(moves){
-				dest[nodeIndex].move = {getBoardOfIndex(intoIndex), (FieldBits)(moves&(~moves+1))};
-				nodeIndex++;
-				moves &= (moves-1);
-			}
-			if(nodeIndex != (unsigned)count){
-				printMove(oldMove);
-				printBigBoard(state);
-			}
 		}
+		return count;
 	}
-	return count;
 }
 
 void printBestPath(const SearchNode * node){
@@ -286,10 +280,11 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 	GameState searchState = *gameState;
 	struct SearchPathNode{
 		SearchPathNode(SearchNode *node, Rating marginAlpha, Rating marginBeta):node(node),
-				childIndex(0), marginAlpha(marginAlpha), marginBeta(marginBeta)
+				final(true), childIndex(0), marginAlpha(marginAlpha), marginBeta(marginBeta)
 		{
 		}
 		SearchNode *node;
+		bool final;
 		unsigned childIndex;
 		Rating marginAlpha; //If max possible rating (from turn players perspective) is better than alpha, skip this node
 		Rating marginBeta; //Max possible rating of all nodes that were already viewed, used as new marginAlpha one depth further
@@ -304,6 +299,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 	auto out = [&](unsigned retain){
 		if(__builtin_expect(nodePath.size() > 0, true)){
 			Rating newRating = current.node->rating;
+			bool final = current.final;
 			for(unsigned i = retain;i<current.node->childCount;i++){
 				current.node->children[i].close();
 			}
@@ -314,6 +310,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 			current = nodePath.top();
 			nodePath.pop();
 			current.marginBeta = isOneBetterThan(current.marginBeta, newRating, searchState.isPlayerOneTurn())?current.marginBeta:newRating;
+			current.final &= final;
             //printDebug<3>("%d Undone move %s with rating %d Beta %d Alpha %d", depth, s, newRating, current.marginBeta, current.marginAlpha);
 			current.childIndex++;
 			depth--;
@@ -380,6 +377,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 				}
 			}else if(depth == maxDepth){
 				current.node->rating = rate(searchState);
+				current.final = searchState.isWon();
 				load = true;
 			}
 
@@ -400,6 +398,10 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 		printBestPath(startNode->children);
 		printInfo("Searched: %u Final %u, Time: %ums, Cuts: %u",
 				nodesSearched, finalNodes, duration_cast<milliseconds>(steady_clock::now()-timeStart), cutsMade);
+		if(current.final){
+			printInfo("All nodes are final, finished searching");
+			break;
+		}
 	}
 }
 

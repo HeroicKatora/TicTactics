@@ -75,8 +75,8 @@ Rating rate(const GameState& state){
 [[gnu::hot, gnu::pure]]
 Rating rate(const TacTicBoard& board){
 	if(board.isWon()){
-		if((board.wonState & 0x6) == 0x2) return Ratings::RATING_P1_WON;
-		if((board.wonState & 0x6) == 0x4) return Ratings::RATING_P2_WON;
+		if((board.wonState & 0x6) == 0x2) return Ratings::RATING_P1_GAME;
+		if((board.wonState & 0x6) == 0x4) return Ratings::RATING_P2_GAME;
 		return 0;
 	}
 	signed sum = 0;
@@ -98,4 +98,3 @@ bool compare(Rating one, Rating two, bool playerOne, const std::function<bool(Ra
 	if(playerOne) return f(one, two);
 	return f(two, one);
 }
-
