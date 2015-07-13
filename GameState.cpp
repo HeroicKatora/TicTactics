@@ -114,10 +114,12 @@ bool GameState::isValidMove(Move& m) const {
 	}else{
 		const Move& previousMove = history.top();
 		FieldBits backMove = getFieldOfBoard(previousMove.getBoardSet());
-		valid &= fieldB != backMove; //Don't make back move
 		if((setInTarget | backMove) < 0x1FF){
 			//Has a move free, has to make a move in field
+			valid &= fieldB != backMove; //Don't make back move
 			valid &= getBoardOfField(previousMove.getFieldSet()) == boardB;
+		}else if(setInTarget == 0x1FF){
+			valid &= fieldB != backMove; //Don't make back move
 		}
 	}
 	return valid;
