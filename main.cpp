@@ -111,7 +111,9 @@ void gameLoop(){
 			Move best{searcher.getBestKnownMove().move};
 			searcher.endParallel();
 			state.playMove(best);
-			printMove(best);
+			char mv [20] = {};
+			sprintMove(mv, best);
+			printOut("move %s", mv);
 		}else if(engineOp()){
 		}else if(matches(line, reg::printReq)){
 			printReq();
