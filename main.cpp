@@ -104,6 +104,9 @@ void gameLoop(){
 			playMove();
 		}else if(matches(line, "Undo")){
 			state.undoMove();
+		}else if(matches(line, "Exit")){
+			printOut(TTTPConst::lineEndTTTP);
+			exit(0);
 		}else if(engineOp()){
 		}else if(matches(line, reg::printReq)){
 			printReq();

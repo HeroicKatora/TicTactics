@@ -14,7 +14,6 @@
 
 #include <cmath>
 #include <thread>
-#include <chrono>
 #include <algorithm>
 #include <functional>
 #include <future>
@@ -80,7 +79,7 @@ MoveSuggestion Searcher::getBestKnownMove() const{
 
 void Searcher::runParallel() {
 	end = false;
-	searchThread = std::thread(std::bind(startSearch, this, &topNode, 0, 0));
+	searchThread = std::thread(std::bind(startSearch, this, &topNode, 0, std::chrono::seconds::zero()));
 	searchThread.detach();
 }
 
@@ -277,11 +276,13 @@ void printBestPath(const SearchNode * node){
 	printChannel(TTTPConst::channelEngine, buffer);
 }
 
-void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t maxDuration){
+void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::chrono::seconds maxDuration){
 	if(!startNode)
 		return;
 
-	time_t startTime = time(NULL);
+	using namespace std::chrono;
+
+	auto startTime = steady_clock::now();
 	GameState searchState = *gameState;
 	struct SearchPathNode{
 		SearchPathNode(SearchNode *node, Rating marginAlpha, Rating marginBeta):node(node),
@@ -337,7 +338,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 		size_t nodesSearched = 0;
 		size_t finalNodes = 0;
 		size_t cutsMade = 0;
-		time_t timeStart = time(NULL);
+		auto timeStart = steady_clock::now();
 		while(!end){
 			if(load){
 				load = false;
@@ -379,7 +380,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 				load = true;
 			}
 
-			if(maxDuration > 0 && time(NULL)-startTime > maxDuration){
+			if(maxDuration > std::chrono::seconds::zero() && steady_clock::now()-startTime > maxDuration){
 				printInfo(EngineConstants::computationTimeExceeded);
 				end = true;
 			}
@@ -394,8 +395,8 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 		current.marginAlpha = maxRating(searchState.isPlayerOneTurn());
 		current.marginBeta = minRating(searchState.isPlayerOneTurn());
 		printBestPath(startNode->children);
-		printInfo("Searched: %u Final %u, Time: %u, Cuts: %u",
-				nodesSearched, finalNodes, time(NULL)-timeStart, cutsMade);
+		printInfo("Searched: %u Final %u, Time: %ums, Cuts: %u",
+				nodesSearched, finalNodes, duration_cast<milliseconds>(steady_clock::now()-timeStart), cutsMade);
 	}
 }
 
@@ -444,4 +445,10 @@ void SearchNode::setToMaxChild(bool playerOne){
 
 void Searcher::eval(){
 	printOut("Board evaluation: %d", rate(*gameState));
+}
+
+Searcher::~Searcher(){
+	endParallel();
+	setPause(false);
+	topNode.close();
 }

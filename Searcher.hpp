@@ -11,6 +11,7 @@ class Searcher;
 #include <atomic>
 #include <mutex>
 #include <thread>
+#include <chrono>
 #include "Move.hpp"
 #include "Rating.hpp"
 
@@ -64,10 +65,11 @@ class Searcher{
 	std::thread searchThread;
 	SearchNode topNode;
 
-	void startSearch(SearchNode *startNode, unsigned maximalDepth, time_t maxDuration);
+	void startSearch(SearchNode *startNode, unsigned maximalDepth, std::chrono::seconds maxDuration);
 
 public:
 	Searcher(const GameState * state);
+	~Searcher();
 
 	MoveSuggestion getBestKnownMove() const;
 
