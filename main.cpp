@@ -107,6 +107,11 @@ void gameLoop(){
 		}else if(matches(line, "Exit")){
 			printOut(TTTPConst::lineEndTTTP);
 			exit(0);
+		}else if(matches(line, "Move")){
+			Move best{searcher.getBestKnownMove().move};
+			searcher.endParallel();
+			state.playMove(best);
+			printMove(best);
 		}else if(engineOp()){
 		}else if(matches(line, reg::printReq)){
 			printReq();

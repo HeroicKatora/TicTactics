@@ -59,7 +59,7 @@ int nextProtocolLine(char *dest, unsigned maxLineLength){
 }
 
 bool matches(const char *word, const char *pattern){
-	std::regex reg(pattern);
+	std::regex reg(pattern, std::regex_constants::icase);
 	return matches(word, reg);
 }
 

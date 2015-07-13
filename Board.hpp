@@ -59,6 +59,8 @@ struct TicTacBoard{
 
 	WonState wonState;
 	BoardField setPlayerOne, setPlayerTwo;
+	mutable Rating rating;
+	mutable bool safe;
 
 	bool checkPlayerOneWon() const;
 	bool checkPlayerTwoWon() const;
@@ -70,6 +72,10 @@ struct TicTacBoard{
 	FieldBits getBlockedFields() const;
 
 	void applyMove(bool playerOne, FieldBits field, bool triState);
+	inline void undoMoveNotWonState(bool playerOne, FieldBits field){
+		safe = false;
+		playerOne? setPlayerOne.bitsUsed:setPlayerTwo.bitsUsed -= field;
+	}
 };
 
 /**

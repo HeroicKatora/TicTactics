@@ -296,7 +296,10 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 	};
 
 	unsigned maxDepth = 1, depth = 0;
-	std::stack<SearchPathNode> nodePath{};
+	std::vector<SearchPathNode> vector;
+	vector.reserve(50);
+	std::stack<SearchPathNode, std::vector<SearchPathNode>> nodePath{vector};
+
 	SearchPathNode current{startNode, maxRating(searchState.isPlayerOneTurn()), minRating(searchState.isPlayerOneTurn())};
 	auto out = [&](unsigned retain){
 		if(__builtin_expect(nodePath.size() > 0, true)){

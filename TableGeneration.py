@@ -51,11 +51,42 @@ chancesMasks =  [
                 int('001000100', 2),
                 int('001010000', 2)
             ]
-            
+
+allMoves = [1,2,4,8,16,32,64,128,256]
 midMask    = int('000010000', 2)
 edgesMask  = int('010101010', 2)
-cornerMask = int('101000101', 2)
+cornersMask = int('101000101', 2)
 
+def isWin(set):
+    for mask in winsMasks:
+        if (set & mask) == mask:
+            return True
+    return False
+
+def chances(set):
+    chances = 0
+    for mask in chancesMasks:
+        if (set & mask) == mask: # Wenn P2 eine potentielle chance hat
+            for third in allMoves:
+                if(third & set):
+                    continue
+                if(isWin(set|third)):
+                    chances = chances+third
+    return chances
+
+#Bezieht chance count nicht mit ein
+def bewerteSingle(set):
+	pop = popCount(set)
+	mid = set&midMask
+	edges = popCount(edgesMask&set)
+	corners = popCount(cornersMask&set)
+	
+	ret = pop *more_bonus
+	if(mid):
+		ret += mid*mid_bonus
+	ret += edges*edge_bonus
+	ret += corners*corner_bonus
+	return ret
 
 def bewerteBoard(setP1, setP2):
     pop1 = popCount(setP1)
@@ -65,9 +96,7 @@ def bewerteBoard(setP1, setP2):
     winP1Bool = False
     winP2Bool = False
     
-    for mask in winsMasks:
-        if (setP1 & mask) == mask:
-            winP1Bool = True
+    winP1Bool = isWin(setP1)
             
     for mask in winsMasks:
         if (setP2 & mask) == mask:
@@ -83,62 +112,19 @@ def bewerteBoard(setP1, setP2):
         return winP2
     '''
     
-    chancesP1 = 0
-    for mask in chancesMasks:
-        if (setP1 & mask) == mask: # Wenn P1 eine potentielle chance hat
-            for winMask in winsMasks:
-                if popCount(winMask&mask) == 2: # suche die winMask die auf die mask passt
-                    if (setP2 & winMask) != 0:  # und ein teil von P2 darauf liegt
-                        break; # dann ist die position doch keine chance
-            else:
-                chancesP1 += 1
+    chancesP1 = chances(setP1)
+    chancesP2 = chances(setP2)
     
-    chancesP2 = 0
-    for mask in chancesMasks:
-        if (setP2 & mask) == mask: # Wenn P2 eine potentielle chance hat
-            for winMask in winsMasks:
-                if popCount(winMask&mask) == 2: # suche die winMask die auf die mask passt
-                    if (setP1 & winMask) != 0:  # und ein teil von P1 darauf liegt
-                        break; # dann ist die position doch keine chance
-            else:
-                chancesP2 += 1
+    chanceCountP1 = popCount(chancesP1 & ~setP2)
+    chanceCountP2 = popCount(chancesP2 & ~setP1)
     
-    p1mid = setP1 & midMask
-    p2mid = setP2 & midMask
+    ret = 0
+    ret += chanceCountP1 * chance_bonus
+    ret -= chanceCountP2 * chance_bonus
     
-     
-    edges = 0
-
-    for i in range(9):
-        if (setP1 & (1 << i)) & edgesMask:
-            edges += 1
-        if (setP2 & (1 << i)) & edgesMask:
-            edges -= 1
-            
-    corners = 0
+    ret += bewerteSingle(setP1)
+    ret -= bewerteSingle(setP2)
     
-    for i in range(9):
-        if (setP1 & (1 << i)) & cornerMask:
-            corners += 1
-        if (setP2 & (1 << i)) & cornerMask:
-            corners -= 1
-    
-    
-    # BEWERTUNG -----------------
-    
-    ret = (pop1 - pop2) * more_bonus
-    
-    ret += chancesP1 * chance_bonus
-    ret -= chancesP2 * chance_bonus
-    
-    ret += edges * edge_bonus
-    ret += corners * corner_bonus
-    
-    if p1mid:
-        ret += mid_bonus
-    if p2mid:
-        ret -= mid_bonus
-
     return int(min(max(ret, -minmaxscore), minmaxscore))
 	
 def popCount(integer):
@@ -166,13 +152,13 @@ file = open("WinMoveTable.h", 'w')
 file.write("//This file is used to look up which moves could win a board in a certain situation\n")
 file.write("//Winning moves are moves, after which the player has a tic tac toe\n")
 file.write("//Therefore this does not check if the tic tac toe existed before (subject to change)")
-file.write("#include \"types.hpp\"\nFieldBits winMoveTable [] = {0\n")
+file.write("#include \"types.hpp\"\n[[gnu::unused]]static FieldBits winMoveTable [] = {0\n")
 
 for set in range(2**9):
 	if not set:
 		continue
 	moves = 0
-	for tryMove in [1,2,4,8,16,32,64,128,256]:
+	for tryMove in allMoves:
 		if set & tryMove:
 			continue
 		winMove = False
@@ -186,7 +172,7 @@ for set in range(2**9):
 
 file.write("};\n")
 
-file.write("bool winsTable[] = {0,")
+file.write("[[gnu::unused]]static bool winsTable[] = {0,\n")
 
 for set in range(2**9):
 	if not set:
@@ -199,4 +185,24 @@ for set in range(2**9):
 		file.write("0,\n")
 
 file.write("};\n")
+
+file.write("[[gnu::unused]]static FieldBits chancesTable[] = {0,\n")
+
+for set in range(2**9):
+	if not set:
+		continue
+	file.write(str(chances(set))+",\n");
+
+file.write("};\n")
+
+file.write("[[gnu::unused]]static Rating singleRatingTable[] = {0,\n")
+
+for set in range(2**9):
+	if not set:
+		continue
+	file.write(str(bewerteSingle(set))+",\n");
+
+file.write("};\n")
+
+
 file.close();

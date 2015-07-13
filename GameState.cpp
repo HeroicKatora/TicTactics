@@ -63,9 +63,11 @@ void GameState::undoMove(Move& m) {
 	gameboard.setPlayerTwo.bitsUsed -= m.getWonBoardPTwo(ticTacBoard->wonState);
 	if(TicTacBoard::isWon(gameboard.wonState)){
 		gameboard.wonState ^= ticTacBoard->wonState;
+		gameboard.safe = false;
 	}
 	if(playerOneTurn) ticTacBoard->setPlayerOne.bitsUsed -= m.getFieldSet();
 	else ticTacBoard->setPlayerTwo.bitsUsed -= m.getFieldSet();
+	ticTacBoard->safe = false;
 	ticTacBoard->wonState = m.getPrevWonState(ticTacBoard->wonState);
 }
 

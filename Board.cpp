@@ -78,6 +78,7 @@ bool TicTacBoard::canOnlyBothWin() const {
 }
 
 void TicTacBoard::applyMove(bool playerOne, FieldBits field, bool triState) {
+	safe = false;
 	if(triState){
 		setPlayerOne.bitsUsed |= field;
 		setPlayerTwo.bitsUsed |= field;
