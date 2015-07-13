@@ -10,6 +10,12 @@
 #include <cstdarg>
 #include <mutex>
 
+#ifdef TTTP_DebugMaxLevel
+constexpr unsigned maxDebugLevel = TTTP_DebugMaxLevel;
+#else
+constexpr unsigned maxDebugLevel = 2;
+#endif
+
 std::mutex outMut{};
 std::mutex errMut{};
 
@@ -57,6 +63,18 @@ void printChannel(const char * identifier, const char * s, ...){
 	va_end(args);
 }
 
+template<unsigned level>
+void printDebug(const char * format, ...){
+	if(level > maxDebugLevel)
+		return;
+	char out[TTTPConst::lineLength];
+	sprintf(out, "[%s]%s\n", TTTPConst::channelDebug, format);
+	va_list args;
+	va_start(args, format);
+	printOut(out, args);
+	va_end(args);
+}
+
 int printMove(const Move& move) {
 	char mv[20];
 	int ret = sprintMove(mv, move);
@@ -81,7 +99,7 @@ int sprintMove(char* dest, const MoveDescriptor& descriptor) {
 
 int sprintRow(char * dest,const TicTacBoard& board, int row, const GameState * surrGame, int boarInd){
 	int off = 0;
-	bool p1 = board.checkPlayerOneWon(), p2 = board.checkPlayerTwoWon();
+	bool p1 = board.hasPlayerOneWon(), p2 = board.hasPlayerTwoWon();
 	for(int j = 0;j<3;j++){
 		char c = TTTPConst::EMPTY;
 		if(surrGame){
@@ -106,7 +124,7 @@ int sprintRow(char * dest,const TicTacBoard& board, int row, const GameState * s
 				c = TTTPConst::Set3W0;
 			}
 		}else if(board.setPlayerTwo.getStateOfCell(j+row*3)){ //Two has this
-			if(board.checkPlayerTwoWon()){
+			if(board.hasPlayerTwoWon()){
 				c = TTTPConst::Set2W2;
 			}else{
 				c = TTTPConst::Set2WA;
@@ -182,3 +200,10 @@ int sprintBigBoard(char* dest, const TacTicBoard& board, const GameState * surrG
 	}
 	return off;
 }
+
+
+template void printDebug<0>(const char*,...);
+template void printDebug<1>(const char*,...);
+template void printDebug<2>(const char*,...);
+template void printDebug<3>(const char*,...);
+template void printDebug<4>(const char*,...);

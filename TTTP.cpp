@@ -10,8 +10,8 @@
 CC TTTPConst::p1 [] = "Player One";
 CC TTTPConst::p2 [] = "Player Two";
 
-CC TTTPConst::VALID = '_';
-CC TTTPConst::EMPTY = '~';
+CC TTTPConst::VALID = '*';
+CC TTTPConst::EMPTY = '_';
 
 CC TTTPConst::Set1W1 = 'X';
 CC TTTPConst::Set1WA = 'x';

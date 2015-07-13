@@ -132,7 +132,7 @@ bool GameState::hasWon(bool playerOne) const{
 	else return gameboard.checkPlayerTwoWon();
 }
 
-[[gnu::const]]
+[[gnu::const, gnu::hot]]
 bool GameState::isPlayerOneTurn()const{
 	return playerOneTurn;
 }

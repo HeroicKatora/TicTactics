@@ -20,6 +20,9 @@ void printErr(const char *,...);
 void printInfo(const char *, ...);
 void printChannel(const char *, const char *,...);
 
+template<unsigned level>
+void printDebug(const char *, ...);
+
 int printMove(const Move&);
 int printMove(const MoveDescriptor&);
 

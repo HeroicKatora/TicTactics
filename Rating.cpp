@@ -45,12 +45,13 @@ Rating rate(const TacTicBoard& board){
 	return sum;
 }
 
-[[gnu::const]]
+[[gnu::const, gnu::hot]]
 bool isOneBetterThan(Rating one, Rating two, bool playerOne){
 	if(!playerOne) return one < two;
 	else return one > two;
 }
 
+[[gnu::const, gnu::hot]]
 bool compare(Rating one, Rating two, bool playerOne, const std::function<bool(Rating, Rating)>& f){
 	if(playerOne) return f(one, two);
 	return f(two, one);

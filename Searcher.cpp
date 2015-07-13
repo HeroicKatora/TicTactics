@@ -298,24 +298,19 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 	std::stack<SearchPathNode> nodePath{};
 	SearchPathNode current{startNode, maxRating(searchState.isPlayerOneTurn()), minRating(searchState.isPlayerOneTurn())};
 	auto out = [&](unsigned retain){
-		if(nodePath.size()){
+		if(__builtin_expect(nodePath.size() > 0, true)){
 			Rating newRating = current.node->rating;
-			if(newRating == 31){
-				char s[4];
-                sprintMove(s, current.node->move);
-				printOut("We have a new Rating of 31, the devil is near %s %d %d %u", s, current.marginBeta, current.marginAlpha, depth);
-			}
 			for(unsigned i = retain;i<current.node->childCount;i++){
 				current.node->children[i].close();
 			}
 			searchState.undoMove(current.node->move);
-			char s[4];
-            sprintMove(s, current.node->move);
-            printOut("Undone move %s", s);
-			searchState.print();
+			//char s[4];
+            //sprintMove(s, current.node->move);
+
 			current = nodePath.top();
 			nodePath.pop();
 			current.marginBeta = isOneBetterThan(current.marginBeta, newRating, searchState.isPlayerOneTurn())?current.marginBeta:newRating;
+            //printDebug<3>("%d Undone move %s with rating %d Beta %d Alpha %d", depth, s, newRating, current.marginBeta, current.marginAlpha);
 			current.childIndex++;
 			depth--;
 			return false;
@@ -328,11 +323,10 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 		nodePath.push(current);
 		current = newNode;
 		searchState.applyAndChangeMove(current.node->move);
-		char s[4];
-        sprintMove(s, current.node->move);
-        printOut("Done move %s", s);
-		searchState.print();
+		//char s[4];
+        //sprintMove(s, current.node->move);
 		depth++;
+        //printDebug<3>("%d Done move %s Beta %d Alpha %d", depth, s, current.marginBeta, current.marginAlpha);
 	};
 
 	printInfo("Started searching");
@@ -357,22 +351,21 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, time_t
 			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stossen erhoehen
 				//Expand this node
 				current.node->discover(searchState.gameboard);
-				if(current.childIndex == current.node->childCount){
-					current.node->revalueChildren(searchState.isPlayerOneTurn());
+				if(__builtin_expect(current.childIndex == current.node->childCount, false)){
+					current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
 					if(current.childIndex == 0){
 						finalNodes++;
 					}
 					load = true;
 				}else{
-					char s[4];
-                    sprintMove(s, current.node->move);
-                    printOut("Move: %s Beta: %d  Alpha %d  Depth %u",s , current.marginBeta, current.marginAlpha, depth);
-					if(compare(current.marginBeta, current.marginAlpha, searchState.isPlayerOneTurn(), std::bind(std::greater_equal<Rating>(),
-							std::placeholders::_1, std::placeholders::_2))){
+					//char s[4];
+                    //sprintMove(s, current.node->move);
+                    //printOut("Move: %s Beta: %d  Alpha %d  Depth %u",s , current.marginBeta, current.marginAlpha, depth);
+					if(__builtin_expect(compare(current.marginBeta, current.marginAlpha, searchState.isPlayerOneTurn(), std::greater_equal<Rating>()), false)){
 						current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
 						cutsMade++;
-						sprintMove(s, current.node->children[0].move);
-						printOut("Cut made because of %s", s);
+						//sprintMove(s, current.node->children[0].move);
+						//printDebug<3>("Cut made because of %s", s);
 						load = true;
 					}else{
 						SearchPathNode next = {&current.node->children[current.childIndex],
@@ -433,7 +426,7 @@ void SearchNode::revalueChildren(bool playerOne){
 void SearchNode::revalueChildren(bool playerOne, unsigned maxChilds){
 	if(!children) return;
 	maxChilds = std::min(maxChilds, childCount);
-	std::stable_sort(children, children+maxChilds-1, std::bind(isOneBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
+	std::stable_sort(children, children+maxChilds, std::bind(isOneBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
 	float chweight = weight;
 	for(unsigned i = 0;i<maxChilds;i++){
 		chweight /= 2;
