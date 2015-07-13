@@ -97,7 +97,7 @@ void GameState::undoMove() {
 [[gnu::const]]
 bool GameState::isValidMove(Move& m) const {
 	//Trivial invalid
-	BoardBits boardB = m.getBoardSet();
+	unsigned boardB = m.getBoardIndex();
 	FieldBits fieldB = m.getFieldSet();
 	if(boardB > 8) return false; //Invalid board index
 	if(fieldB > 0x100) return false; //Invalid field index
@@ -113,12 +113,14 @@ bool GameState::isValidMove(Move& m) const {
 		valid &= (winMoves(gameboard.components[boardB].setPlayerOne) & fieldB) == 0; //Not a board win
 	}else{
 		const Move& previousMove = history.top();
+		FieldBits setInAim = ((const FieldBits)gameboard.components[previousMove.getFieldIndex()].setPlayerOne) |
+				((const FieldBits) gameboard.components[previousMove.getFieldIndex()].setPlayerTwo);
 		FieldBits backMove = getFieldOfBoard(previousMove.getBoardSet());
-		if((setInTarget | backMove) < 0x1FF){
+		if((setInAim | backMove) < 0x1FF){
 			//Has a move free, has to make a move in field
 			valid &= fieldB != backMove; //Don't make back move
 			valid &= getBoardOfField(previousMove.getFieldSet()) == boardB;
-		}else if(setInTarget == 0x1FF){
+		}else if(setInAim == 0x1FF){
 			valid &= fieldB != backMove; //Don't make back move
 		}
 	}
