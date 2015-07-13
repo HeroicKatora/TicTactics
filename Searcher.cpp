@@ -403,6 +403,9 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 			break;
 		}
 	}
+	while(nodePath.size()){
+		out(getWeightedMaxChildNumber(current.node->weight, depth));
+	}
 }
 
 void SearchNode::discover(const TacTicBoard& state){
