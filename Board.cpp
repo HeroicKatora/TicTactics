@@ -49,17 +49,25 @@ bool BoardField::getStateOfCell(unsigned index) const {
 
 
 bool TicTacBoard::checkPlayerOneWon() const {
-	if(hasPlayerTwoWon()) return false;
 	if(hasPlayerOneWon()) return true;
-	if(wonState == ONLYBOTH && !((setPlayerOne|setPlayerTwo) == 0x1FF)) return false;
-	return isWinBoard(setPlayerOne);
+	bool full = ((setPlayerOne|setPlayerTwo) == 0x1FF);
+	if(hasPlayerTwoWon() && !full) return false; //Full means possibly both
+	if(wonState == ONLYBOTH && !full) return false;
+	if(full)
+		return isWinBoard(setPlayerTwo)?false:true;
+	else
+		return isWinBoard(setPlayerOne);
 }
 
 bool TicTacBoard::checkPlayerTwoWon() const{
-	if(hasPlayerOneWon()) return false;
 	if(hasPlayerTwoWon()) return true;
-	if(wonState == ONLYBOTH && !((setPlayerOne|setPlayerTwo) == 0x1FF)) return false;
-	return isWinBoard(setPlayerTwo);
+	bool full = ((setPlayerOne|setPlayerTwo) == 0x1FF);
+	if(hasPlayerOneWon() && !full) return false;
+	if(wonState == ONLYBOTH && !full) return false;
+	if(full)
+		return isWinBoard(setPlayerOne)?false:true;
+	else
+		return isWinBoard(setPlayerTwo);
 }
 
 [[gnu::const]]

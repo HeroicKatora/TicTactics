@@ -273,6 +273,7 @@ void printBestPath(const SearchNode * node){
 void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::chrono::seconds maxDuration){
 	if(!startNode)
 		return;
+	if(maximalDepth <= 0) maximalDepth = 81;
 	maximalDepth = std::min(maximalDepth, (unsigned)81);
 	using namespace std::chrono;
 
@@ -352,7 +353,10 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stossen erhoehen
 				//Expand this node
 				current.node->discover(searchState.gameboard);
-				if(current.node->childCount == 0) finalNodes++;
+				if(current.node->childCount == 0){
+					finalNodes++;
+					current.final = true;
+				}
 			}
 			if(__builtin_expect(current.childIndex == current.node->childCount, false)){
 				if(current.childIndex == 0){ //depth == maxDepth oder keine Childnodes
@@ -371,7 +375,6 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 					cutsMade++;
 					//sprintMove(s, current.node->children[0].move);
 					//printDebug<3>("Cut made because of %s", s);
-					current.final = true;
 					load = true;
 				}else{
 					SearchPathNode next = {&current.node->children[current.childIndex],
