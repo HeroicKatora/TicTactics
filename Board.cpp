@@ -90,20 +90,17 @@ void TicTacBoard::applyMove(bool playerOne, FieldBits field, bool triState) {
 	if(triState){
 		setPlayerOne.bitsUsed |= field;
 		setPlayerTwo.bitsUsed |= field;
-		bool p1 = checkPlayerOneWon();
-		bool p2 = checkPlayerTwoWon();
-		if(p1 && p2) wonState |= WONP1|WONP2;
-		if(p1) wonState |= WONP1;
-		if(p2) wonState |= WONP2;
 	}else{
 		if(playerOne){
 			setPlayerOne.bitsUsed |= field;
-			if(checkPlayerOneWon()) wonState |= WONP1;
 		}else{
 			setPlayerTwo.bitsUsed |= field;
-			if(checkPlayerTwoWon()) wonState |= WONP2;
 		}
 	}
+	bool p1 = checkPlayerOneWon();
+	bool p2 = checkPlayerTwoWon();
+	if(p1) wonState |= WONP1;
+	if(p2) wonState |= WONP2;
 }
 
 [[gnu::const]]

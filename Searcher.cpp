@@ -361,7 +361,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 			if(__builtin_expect(current.childIndex == current.node->childCount, false)){
 				if(current.childIndex == 0){ //depth == maxDepth oder keine Childnodes
 					current.node->rating = rate(searchState);
-					current.final = depth < maxDepth;
+					current.final = searchState.isWon() || depth < maxDepth;
 				}else{
 					current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
 				}

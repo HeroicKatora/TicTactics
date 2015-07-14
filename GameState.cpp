@@ -61,9 +61,9 @@ void GameState::undoMove(Move& m) {
 	playerOneTurn = !playerOneTurn;
 	gameboard.setPlayerOne.bitsUsed -= m.getWonBoardPOne(ticTacBoard->wonState);
 	gameboard.setPlayerTwo.bitsUsed -= m.getWonBoardPTwo(ticTacBoard->wonState);
+	gameboard.safe = false;
 	if(TicTacBoard::isWon(gameboard.wonState)){
-		gameboard.wonState ^= ticTacBoard->wonState;
-		gameboard.safe = false;
+		gameboard.wonState = 0x1 & gameboard.wonState;
 	}
 	if(playerOneTurn) ticTacBoard->setPlayerOne.bitsUsed -= m.getFieldSet();
 	else ticTacBoard->setPlayerTwo.bitsUsed -= m.getFieldSet();
@@ -81,7 +81,7 @@ bool GameState::playMove(Move m) {
 	}else{
 		char moveS[30];
 		sprintMove(moveS, m);
-		printInfo("Invalid move %s\n", moveS);
+		printInfo("Invalid move: %s\n", moveS);
 		return false;
 	}
 }
