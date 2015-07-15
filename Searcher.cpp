@@ -49,10 +49,11 @@
  * And n = node.weigth * log d
  */
 [[gnu::const]]
-float functionN(unsigned depth){
+inline constexpr float functionN(unsigned depth){
 	return (float) 10e7;
 }
 
+[[gnu::pure]]
 unsigned getWeightedMaxChildNumber(float weight, unsigned depth){
 	//We use caching since that is O(c), while the function n might not be
 	static std::vector<float> calculationResults {};
@@ -268,9 +269,9 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 	}
 }
 
-void printBestPath(const SearchNode * node, unsigned depth, signed nodes, std::chrono::milliseconds time){
+void printBestPath(const SearchNode * node, unsigned depth, long long signed nodes, std::chrono::milliseconds time){
 	char buffer [1000];
-	int off = sprintf(buffer, "score: %d depth: %u nodes: %u time: %u ", node->rating, depth, nodes, time);
+	int off = sprintf(buffer, "score: %d depth: %u nodes: %-15llu time: %-10u ", node->rating, depth, nodes, time);
 	node = node->children;
 	for(int i = 0;i<100 && node;i++){
 		off += sprintMove(buffer+off, node->move);
@@ -339,11 +340,12 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 	};
 
 	printInfo("Started searching");
+	long long signed nodesSearched = 0;
+	long long signed nodesSearchedRecent = 0;
 	bool load = false;
 	for(;!end && (maximalDepth == 0 || maxDepth < maximalDepth);maxDepth++){
 		depth = 0;
 		printOut(":Search depth %u:", maxDepth);
-		size_t nodesSearched = 0;
 		size_t finalNodes = 0;
 		size_t cutsMade = 0;
 		const auto timeStart = steady_clock::now();
@@ -402,8 +404,12 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 		current.childIndex = 0;
 		current.marginAlpha = maxRating(searchState.isPlayerOneTurn());
 		current.marginBeta = minRating(searchState.isPlayerOneTurn());
-		printBestPath(startNode, maxDepth, nodesSearched, duration_cast<milliseconds>(steady_clock::now()-startTime));
-		printChannel(TTTPConst::channelDebug, "Engine stats: Time for this layer: %u A-B-Cuts: %u", duration_cast<milliseconds>(steady_clock::now()-timeStart), cutsMade);
+		auto nowTime = steady_clock::now();
+		printBestPath(startNode, maxDepth, nodesSearched, duration_cast<milliseconds>(nowTime-startTime));
+		printChannel(TTTPConst::channelDebug, "Nodes layer: %-10u Time layer: %-8u Cuts layer: %-10u",
+				(size_t) (nodesSearched - nodesSearchedRecent), duration_cast<milliseconds>(nowTime-timeStart), cutsMade);
+
+		nodesSearchedRecent = nodesSearched;
 		if(current.node->rating == maxRating(true) || current.node->rating == minRating(true)){
 			printInfo("All nodes are final, finished searching");
 			break;
