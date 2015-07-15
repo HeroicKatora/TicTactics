@@ -5,7 +5,6 @@
  *      Author: Andreas Molzer
  */
 #include "Board.hpp"
-#include "WinMoveTable.h"
 
 const BoardField Fields::winBoards [] =
 		{BoardField(07), BoardField(070), BoardField(0700), 	//waagrecht
@@ -61,11 +60,8 @@ void TicTacBoard::applyMove(bool playerOne, FieldBits field, bool triState) {
 }
 
 [[gnu::pure]]
-bool isWinBoard(const BoardField field){
+constexpr bool isWinBoard(const BoardField field){
 	return winsTable[field.bitsUsed];
 }
 
-[[gnu::pure]]
-FieldBits winMoves(BoardField set){
-	return winMoveTable[(FieldBits) set];
-}
+

@@ -149,10 +149,11 @@ file.write("};\n")
 file.close()
 # Generate win moves table
 file = open("WinMoveTable.h", 'w')
+file.write("#include \"types.hpp\"\n")
 file.write("//This file is used to look up which moves could win a board in a certain situation\n")
 file.write("//Winning moves are moves, after which the player has a tic tac toe\n")
 file.write("//Therefore this does not check if the tic tac toe existed before (subject to change)")
-file.write("#include \"types.hpp\"\n[[gnu::unused]]static FieldBits winMoveTable [] = {0\n")
+file.write("\n[[gnu::unused]]static constexpr FieldBits winMoveTable [] = {0\n")
 
 for set in range(2**9):
 	if not set:
@@ -172,7 +173,7 @@ for set in range(2**9):
 
 file.write("};\n")
 
-file.write("[[gnu::unused]]static bool winsTable[] = {0,\n")
+file.write("[[gnu::unused]]static constexpr bool winsTable[] = {0,\n")
 
 for set in range(2**9):
 	if not set:
@@ -186,7 +187,7 @@ for set in range(2**9):
 
 file.write("};\n")
 
-file.write("[[gnu::unused]]static FieldBits chancesTable[] = {0,\n")
+file.write("[[gnu::unused]]static constexpr FieldBits chancesTable[] = {0,\n")
 
 for set in range(2**9):
 	if not set:
@@ -195,7 +196,7 @@ for set in range(2**9):
 
 file.write("};\n")
 
-file.write("[[gnu::unused]]static Rating singleRatingTable[] = {0,\n")
+file.write("[[gnu::unused]]static constexpr Rating singleRatingTable[] = {0,\n")
 
 for set in range(2**9):
 	if not set:

@@ -6,8 +6,8 @@
  */
 #include "Rating.hpp"
 #include "GameState.hpp"
-#include "RatingTable.h"
-#include "WinMoveTable.h"
+//#include "RatingTable.h"
+//#include "WinMoveTable.h"
 #include <limits>
 
 Rating Ratings::RATING_P1_WON = 100;

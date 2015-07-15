@@ -7,6 +7,7 @@
 
 #pragma once
 #include "types.hpp"
+#include "WinMoveTable.h"
 
 /**
  * A wrapper that holds the state of a board. Each of the 9 cells can be ticked or unticked.
@@ -132,9 +133,6 @@ struct TacTicBoard:TicTacBoard{
 	}
 };
 
-__attribute__((const))
-bool isWinBoard(const BoardField field);
-
 struct Fields{
 	static const BoardField winBoards [9];
 	static const BoardField fullBoard;
@@ -145,6 +143,11 @@ struct Fields{
  * the player was playing alone. Apply & with the remaining fields and
  * you get the possible moves that win the board for a player.
  */
-__attribute__((const))
-FieldBits winMoves(BoardField board);
+[[gnu::pure]]
+constexpr FieldBits winMoves(BoardField set){
+	return winMoveTable[(FieldBits) set];
+}
+
+[[gnu::pure]]
+constexpr bool isWinBoard(const BoardField field);
 
