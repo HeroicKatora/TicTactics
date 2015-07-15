@@ -103,28 +103,20 @@ bool GameState::isValidMove(Move& m) const {
 	if(fieldB > 0x100) return false; //Invalid field index
 	if(__builtin_popcount(fieldB) != 1) return false; //Invalid field descriptor (more than one bit set)
 
-	//More complex invalid
-	bool valid = true;
-	FieldBits setInTarget = ((const FieldBits)gameboard.components[boardB].setPlayerOne) |
-			((const FieldBits) gameboard.components[boardB].setPlayerTwo);
-	valid &= ((fieldB & setInTarget) == 0);  //Is not on top of a set field
-	if(history.empty()){
-		valid &= boardB != 4 || fieldB != 0x10; //not the mid mid field
-		valid &= (winMoves(gameboard.components[boardB].setPlayerOne) & fieldB) == 0; //Not a board win
-	}else{
-		const Move& previousMove = history.top();
-		FieldBits setInAim = ((const FieldBits)gameboard.components[previousMove.getFieldIndex()].setPlayerOne) |
-				((const FieldBits) gameboard.components[previousMove.getFieldIndex()].setPlayerTwo);
-		FieldBits backMove = getFieldOfBoard(previousMove.getBoardSet());
-		if((setInAim | backMove) < 0x1FF){
-			//Has a move free, has to make a move in field
-			valid &= fieldB != backMove; //Don't make back move
-			valid &= getBoardOfField(previousMove.getFieldSet()) == boardB;
-		}else if(setInAim == 0x1FF){
-			valid &= fieldB != backMove; //Don't make back move
+	Move lastMove{};
+	if(history.size()){
+		lastMove = history.top();
+	}
+	SearchNode * possibilites;
+	unsigned amount = discoverMoves(gameboard, possibilites, lastMove);
+	while(amount){
+		if(possibilites[--amount].move == m){
+			delete(possibilites);
+			return true;
 		}
 	}
-	return valid;
+	delete(possibilites);
+	return false;
 }
 
 [[gnu::const]]

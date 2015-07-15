@@ -170,7 +170,8 @@ struct Movecount{
 	enum Type{
 		Normal,
 		Back,
-		Out
+		Out,
+		OutBack
 	};
 	Type type;
 };
@@ -185,8 +186,13 @@ Movecount countPlayMoves(const TacTicBoard& state, const Move& oldMove){
 	size_t moveWBack = countPossibleMoves(state.components[index], 0);
 	if(moveWBack == 0){
 		for(size_t i = 0;i<9;i++){
-			if(i == index) continue;
 			moves += countPossibleMoves(state.components[i], getFieldOfIndex(backIndex));
+		}
+		if(moves == 0){
+			for(size_t i = 0;i<9;i++){
+				moves += countPossibleMoves(state.components[i], 0);
+			}
+			return {moves, Movecount::OutBack};
 		}
 		return {moves, Movecount::Out};
 	}else if(moves == 0){
@@ -238,7 +244,7 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 			}
 		}else if(__builtin_expect(mCount.type == Movecount::Back, false)){
 			dest[0].move = {getBoardOfIndex(intoIndex), backField};
-		}else{
+		}else if(__builtin_expect(mCount.type == Movecount::Out, true)){
 			for(unsigned i = 0;i<9;i++){
 				if(i == oldMove.getFieldIndex()) continue;
 				FieldBits nonMoves = state.components[i].getBlockedFields();
@@ -250,6 +256,13 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 					moves &= (moves-1);
 				}
 			}
+		}else{
+			for(unsigned i = 0;i<9;i++){
+				if(!(state.components[i].getBlockedFields() & backField)){
+					dest[nodeIndex].move = {getBoardOfIndex(i), backField};
+					nodeIndex++;
+				}
+			}
 		}
 		return count;
 	}
@@ -258,11 +271,12 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 void printBestPath(const SearchNode * node){
 	char buffer [1000];
 	int off = sprintf(buffer, "%10s ", "");
-	signed nodeRating = 0;
+	signed nodeRating = node->rating;
+	node = node->children;
 	for(int i = 0;i<100 && node;i++){
 		off += sprintMove(buffer+off, node->move);
 		off += sprintf(buffer+off, " ");
-		nodeRating = node->rating;
+		//nodeRating = node->rating;
 		node = node->children;
 	}
 	snprintf(buffer, 1000, "%-10i", nodeRating);
@@ -270,22 +284,20 @@ void printBestPath(const SearchNode * node){
 	printChannel(TTTPConst::channelEngine, buffer);
 }
 
-void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::chrono::seconds maxDuration){
+void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, const std::chrono::seconds maxDuration){
 	if(!startNode)
 		return;
-	if(maximalDepth <= 0) maximalDepth = 81;
-	maximalDepth = std::min(maximalDepth, (unsigned)81);
+	const unsigned maximalDepth = maximalSearchDepth == 0? 81 : std::min(maximalSearchDepth, (unsigned)81);
 	using namespace std::chrono;
 
-	auto startTime = steady_clock::now();
+	const auto startTime = steady_clock::now();
 	GameState searchState = *gameState;
 	struct SearchPathNode{
 		SearchPathNode(SearchNode *node, Rating marginAlpha, Rating marginBeta):node(node),
-				final(true), childIndex(0), marginAlpha(marginAlpha), marginBeta(marginBeta)
+				childIndex(0), marginAlpha(marginAlpha), marginBeta(marginBeta)
 		{
 		}
 		SearchNode *node;
-		bool final;
 		unsigned childIndex;
 		Rating marginAlpha; //If max possible rating (from turn players perspective) is better than alpha, skip this node
 		Rating marginBeta; //Max possible rating of all nodes that were already viewed, used as new marginAlpha one depth further
@@ -297,10 +309,9 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 	std::stack<SearchPathNode, std::vector<SearchPathNode>> nodePath{vector};
 
 	SearchPathNode current{startNode, maxRating(searchState.isPlayerOneTurn()), minRating(searchState.isPlayerOneTurn())};
-	auto out = [&](unsigned retain){
+	const auto out = [&](unsigned retain){
 		if(__builtin_expect(nodePath.size() > 0, true)){
 			Rating newRating = current.node->rating;
-			bool final = current.final;
 			for(unsigned i = retain;i<current.node->childCount;i++){
 				current.node->children[i].close();
 			}
@@ -311,7 +322,6 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 			current = nodePath.top();
 			nodePath.pop();
 			current.marginBeta = isOneBetterThan(current.marginBeta, newRating, searchState.isPlayerOneTurn())?current.marginBeta:newRating;
-			current.final &= final;
             //printDebug<3>("%d Undone move %s with rating %d Beta %d Alpha %d", depth, s, newRating, current.marginBeta, current.marginAlpha);
 			current.childIndex++;
 			depth--;
@@ -321,7 +331,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 			return true;
 		}
 	};
-	auto in = [&](SearchPathNode& newNode){
+	const auto in = [&](SearchPathNode& newNode){
 		nodePath.push(current);
 		current = newNode;
 		searchState.applyAndChangeMove(current.node->move);
@@ -333,13 +343,13 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 
 	printInfo("Started searching");
 	bool load = false;
-	for(;!end && (maximalDepth <= 0 || maxDepth < maximalDepth);maxDepth++){
+	for(;!end && (maximalDepth == 0 || maxDepth < maximalDepth);maxDepth++){
 		depth = 0;
 		printOut(":Search depth %u:", maxDepth);
 		size_t nodesSearched = 0;
 		size_t finalNodes = 0;
 		size_t cutsMade = 0;
-		auto timeStart = steady_clock::now();
+		const auto timeStart = steady_clock::now();
 		while(!end){
 			if(load){
 				load = false;
@@ -348,28 +358,25 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 				}
 			}
 
+			//char s[4];
+			//sprintMove(s, current.node->move);
+			//printOut("Move: %s Beta: %d  Alpha %d  Depth %u",s , current.marginBeta, current.marginAlpha, depth);
 			//Search code
-
 			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stossen erhoehen
 				//Expand this node
 				current.node->discover(searchState.gameboard);
 				if(current.node->childCount == 0){
 					finalNodes++;
-					current.final = true;
 				}
 			}
 			if(__builtin_expect(current.childIndex == current.node->childCount, false)){
 				if(current.childIndex == 0){ //depth == maxDepth oder keine Childnodes
 					current.node->rating = rate(searchState);
-					current.final = searchState.isWon() || depth < maxDepth;
 				}else{
 					current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
 				}
 				load = true;
 			}else{
-				//char s[4];
-				//sprintMove(s, current.node->move);
-				//printOut("Move: %s Beta: %d  Alpha %d  Depth %u",s , current.marginBeta, current.marginAlpha, depth);
 				if(__builtin_expect(compare(current.marginBeta, current.marginAlpha, searchState.isPlayerOneTurn(), std::greater_equal<Rating>()), false)){
 					current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
 					cutsMade++;
@@ -398,11 +405,12 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalDepth, std::c
 		current.childIndex = 0;
 		current.marginAlpha = maxRating(searchState.isPlayerOneTurn());
 		current.marginBeta = minRating(searchState.isPlayerOneTurn());
-		printBestPath(startNode->children);
+		printBestPath(startNode);
 		printInfo("Searched: %u Final %u, Time: %ums, Cuts: %u",
 				nodesSearched, finalNodes, duration_cast<milliseconds>(steady_clock::now()-timeStart), cutsMade);
-		if(current.final){
+		if(current.node->rating == maxRating(true) || current.node->rating == minRating(true)){
 			printInfo("All nodes are final, finished searching");
+			fprintf(stdin, "move");
 			break;
 		}
 	}

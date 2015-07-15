@@ -91,7 +91,6 @@ public:
 
 /**
  * Allocates a new array containing the discovered move nodes and stores it to dest.
- * At maximum maxNumber are stored, the return type is how many were discovered.
- * Use a max size of -1 to be unbounded
+ * The return value is how many were discovered. An old move of invalid means the game is at the start.
  */
-size_t discoverMoves(const GameState *state,SearchNode *&dest, size_t maxNumber);
+size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& oldMove);
