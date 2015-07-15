@@ -43,8 +43,8 @@ Rating rate(const GameState& state){
 }*/
 
  Rating rate(const TicTacBoard& board){
-	//if(__builtin_expect(board.safe, false))
-	//	return board.rating;
+	if(__builtin_expect(board.safe, true))
+		return board.rating;
 
 	if(board.isWon()){
 		if((board.wonState & 0x6) == 0x2) return Ratings::RATING_P1_WON;

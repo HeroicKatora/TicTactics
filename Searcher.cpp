@@ -242,8 +242,6 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 				nodeIndex++;
 				moves &= (moves-1);
 			}
-		}else if(__builtin_expect(mCount.type == Movecount::Back, false)){
-			dest[0].move = {getBoardOfIndex(intoIndex), backField};
 		}else if(__builtin_expect(mCount.type == Movecount::Out, true)){
 			for(unsigned i = 0;i<9;i++){
 				if(i == oldMove.getFieldIndex()) continue;
@@ -256,6 +254,8 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 					moves &= (moves-1);
 				}
 			}
+		}else if(__builtin_expect(mCount.type == Movecount::Back, false)){
+			dest[0].move = {getBoardOfIndex(intoIndex), backField};
 		}else{
 			for(unsigned i = 0;i<9;i++){
 				if(!(state.components[i].getBlockedFields() & backField)){

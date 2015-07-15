@@ -17,23 +17,6 @@ void GameState::applyAndChangeMove(Move& m) {
 	TicTacBoard::WonState prevWon = ticTacBoard->wonState;
 	ticTacBoard->applyMove(playerOneTurn, m.getFieldSet(), false);
 	m.setWonState(prevWon, ticTacBoard->wonState);
-	if(m.hasWinOccurred(ticTacBoard->wonState)){
-		TicTacBoard::WonState algorithm = ticTacBoard->wonState&TicTacBoard::ONLYBOTH;
-		if(algorithm != prevWon){
-		printBigBoard(gameboard);
-			//printBoard(*ticTacBoard);
-			printChannel(TTTPConst::channelDebug, "WinState prev, now: %u, %u", prevWon, ticTacBoard->wonState);
-			printChannel(TTTPConst::channelDebug, "Real/Algorithm output: %u/%u", prevWon, algorithm);
-		}
-	}else{
-		TicTacBoard::WonState algorithm = ticTacBoard->wonState;
-		if(algorithm != prevWon){
-			printBigBoard(gameboard);
-			//printBoard(*ticTacBoard);
-			printChannel(TTTPConst::channelDebug, "Non WinState prev, now: %u, %u", prevWon, ticTacBoard->wonState);
-			printChannel(TTTPConst::channelDebug, "Real/Algorithm output: %u/%u", prevWon, algorithm);
-		}
-	}
 	if(!TicTacBoard::isWon(prevWon)){
 		//Potential new win
 		BoardBits wonBoard = getFieldOfBoard(m.getBoardSet());

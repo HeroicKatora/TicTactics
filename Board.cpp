@@ -17,31 +17,6 @@ BoardField::BoardField(const FieldBits bits):bitsUsed(bits){
 }
 
 [[gnu::const]]
-bool TicTacBoard::isWon(WonState wonState){
-	return wonState > 1;
-}
-
-[[gnu::const]]
-bool TicTacBoard::hasPlayerOneWon(WonState wonState){
-	return wonState & WONP1;
-}
-
-[[gnu::const]]
-bool TicTacBoard::hasPlayerTwoWon(WonState wonState){
-	return wonState & WONP2;
-}
-
-[[gnu::const]]
-bool TicTacBoard::canOnlyBothWin(WonState wonState){
-	return wonState & ONLYBOTH;
-}
-
-[[gnu::const]]
-bool TicTacBoard::isWon() const{
-	return wonState > 1;
-}
-
-[[gnu::const]]
 bool BoardField::getStateOfCell(unsigned index) const {
 	if(index > 8) return false;
 	return (0x1<<index)&bitsUsed;
@@ -68,21 +43,6 @@ bool TicTacBoard::checkPlayerTwoWon() const{
 		return isWinBoard(setPlayerOne)?false:true;
 	else
 		return isWinBoard(setPlayerTwo);
-}
-
-[[gnu::const]]
-bool TicTacBoard::hasPlayerOneWon() const {
-	return wonState & WONP1;
-}
-
-[[gnu::const]]
-bool TicTacBoard::hasPlayerTwoWon() const {
-	return wonState & WONP2;
-}
-
-[[gnu::const]]
-bool TicTacBoard::canOnlyBothWin() const {
-	return wonState & ONLYBOTH;
 }
 
 void TicTacBoard::applyMove(bool playerOne, FieldBits field, bool triState) {
@@ -119,11 +79,6 @@ bool BoardField::operator ==(const BoardField& other) const {
 }
 
 BoardField::BoardField() :bitsUsed((FieldBits) 0){
-}
-
-[[gnu::const]]
-FieldBits TicTacBoard::getBlockedFields() const{
-	return (FieldBits)(setPlayerOne|setPlayerTwo);
 }
 
 [[gnu::pure]]

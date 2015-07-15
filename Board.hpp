@@ -32,6 +32,7 @@ struct BoardField{
 	bool getStateOfCell(unsigned index) const;
 };
 
+
 /**
  * A small board with 9 single fields
  */
@@ -43,19 +44,30 @@ struct TicTacBoard{
 	static const WonState WONP1 = 0x2;
 	static const WonState WONP2 = 0x4;
 
-	__attribute__((const))
-	static bool isWon(WonState wonState);
+	[[gnu::const]]
+	inline static bool isWon(WonState wonState){
+		return wonState > 1;
+	}
 
-	__attribute__((const))
-	static bool hasPlayerOneWon(WonState wonState);
+	[[gnu::const]]
+	inline static bool hasPlayerOneWon(WonState wonState){
+		return wonState & WONP1;
+	}
 
-	__attribute__((const))
-	static bool hasPlayerTwoWon(WonState wonState);
+	[[gnu::const]]
+	inline static bool hasPlayerTwoWon(WonState wonState){
+		return wonState & WONP2;
+	}
 
-	__attribute__((const))
-	static bool canOnlyBothWin(WonState wonState);
+	[[gnu::const]]
+	inline static bool canOnlyBothWin(WonState wonState){
+		return wonState & ONLYBOTH;
+	}
 
-	bool isWon() const;
+	[[gnu::const]]
+	inline bool isWon() const{
+		return wonState > 1;
+	}
 
 	WonState wonState;
 	BoardField setPlayerOne, setPlayerTwo;
@@ -65,11 +77,25 @@ struct TicTacBoard{
 	bool checkPlayerOneWon() const;
 	bool checkPlayerTwoWon() const;
 
-	bool hasPlayerOneWon() const;
-	bool hasPlayerTwoWon() const;
-	bool canOnlyBothWin() const;
+	[[gnu::const]]
+	inline bool hasPlayerOneWon() const {
+		return wonState & WONP1;
+	}
 
-	FieldBits getBlockedFields() const;
+	[[gnu::const]]
+	inline bool hasPlayerTwoWon() const {
+		return wonState & WONP2;
+	}
+
+	[[gnu::const]]
+	inline bool canOnlyBothWin() const {
+		return wonState & ONLYBOTH;
+	}
+
+	[[gnu::const]]
+	inline FieldBits getBlockedFields() const{
+		return (FieldBits)(setPlayerOne|setPlayerTwo);
+	}
 
 	void applyMove(bool playerOne, FieldBits field, bool triState);
 	inline void undoMoveNotWonState(bool playerOne, FieldBits field){
