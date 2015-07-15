@@ -13,9 +13,6 @@ const BoardField Fields::winBoards [] =
 		BoardField(0124), BoardField(0421) };					//diagonal
 const BoardField Fields::fullBoard = BoardField(0x777);
 
-BoardField::BoardField(const FieldBits bits):bitsUsed(bits){
-}
-
 [[gnu::const]]
 bool BoardField::getStateOfCell(unsigned index) const {
 	if(index > 8) return false;
@@ -61,24 +58,6 @@ void TicTacBoard::applyMove(bool playerOne, FieldBits field, bool triState) {
 	bool p2 = checkPlayerTwoWon();
 	if(p1) wonState |= WONP1;
 	if(p2) wonState |= WONP2;
-}
-
-[[gnu::const]]
-BoardField BoardField::operator &(const BoardField& other) const {
-	return BoardField(bitsUsed&other.bitsUsed);
-}
-
-[[gnu::const]]
-BoardField BoardField::operator |(const BoardField& other) const {
-	return BoardField(bitsUsed|other.bitsUsed);
-}
-
-[[gnu::const]]
-bool BoardField::operator ==(const BoardField& other) const {
-	return bitsUsed == other.bitsUsed;
-}
-
-BoardField::BoardField() :bitsUsed((FieldBits) 0){
 }
 
 [[gnu::pure]]

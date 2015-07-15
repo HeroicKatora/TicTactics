@@ -19,27 +19,31 @@ class MoveHistory;
 struct MoveDescriptor{
 	BoardBits whichBoard;
 	FieldBits whichField;
-	MoveDescriptor():whichBoard(-1), whichField(-1){}
-	MoveDescriptor(BoardBits board, FieldBits field){
-		whichBoard = board;
-		whichField = field;
-	}
-	bool operator==(MoveDescriptor& comp) const{
+	inline constexpr MoveDescriptor():whichBoard(-1), whichField(-1){};
+	inline constexpr MoveDescriptor(BoardBits board, FieldBits field):whichBoard(board), whichField(field){};
+
+	[[gnu::const]]
+	inline bool operator==(MoveDescriptor& comp) const{
 		return whichBoard == comp.whichBoard && whichField == comp.whichField;
 	}
-	inline BoardBits getBoard() const{
+	[[gnu::const]]
+	inline constexpr BoardBits getBoard() const{
 		return whichBoard;
 	}
-	inline FieldBits getField() const{
+	[[gnu::const]]
+	inline constexpr FieldBits getField() const{
 		return whichField;
 	}
-	unsigned getBoardIndex() const{
+	[[gnu::const]]
+	inline constexpr unsigned getBoardIndex() const{
 		return getIndexOfBoard(whichBoard);
 	}
-	unsigned getFieldIndex() const{
+	[[gnu::const]]
+	inline constexpr unsigned getFieldIndex() const{
 		return getIndexOfField(whichField);
 	}
-	bool isInvalidDefault() const{
+	[[gnu::const]]
+	inline constexpr bool isInvalidDefault() const{
 		return whichBoard == (BoardBits)-1 && whichField == (FieldBits)-1;
 	}
 };
@@ -48,26 +52,62 @@ struct MoveDescriptor{
 struct [[gnu::packed]] Move{
 	using WonState = TicTacBoard::WonState;
 
-	Move();
-	Move(BoardBits board, FieldBits field);
-	Move(MoveDescriptor description);
+	inline constexpr Move():winOccurred(false), onlyBothOccurred(false),set(~0){};
+	inline constexpr Move(BoardBits board, FieldBits field):
+			winOccurred(false), onlyBothOccurred(false),
+			set((getIndexOfBoard(board)<<4)+getIndexOfField(field)){};
+	inline constexpr Move(MoveDescriptor description):
+			Move(description.getBoard(), description.getField()){};
+
+	[[gnu::const]]
+	inline constexpr bool operator==(Move& other){
+		return other.set == set;
+	}
 
 	bool winOccurred;
 	bool onlyBothOccurred;
 	std::uint8_t set;
 
-	bool isInvalidDefault() const;
-	bool operator==(Move& other);
+
+	[[gnu::const]]
+	inline constexpr bool isInvalidDefault() const{
+		return set == (decltype(set))-1;
+	}
 
 	void setWonState(WonState prevWonState, WonState afterMove);
 	WonState getPrevWonState(WonState afterMove) const;
 	void setIndices(unsigned boardIndex, unsigned fieldIndex);
-	BoardBits getBoardSet() const;
-	FieldBits getFieldSet() const;
-	unsigned getBoardIndex() const;
-	unsigned getFieldIndex() const;
-	bool hasWinOccurred(WonState afterMove) const;
-	bool hasOnlyBothOccurred(WonState afterMove) const;
+
+	[[gnu::const]]
+	inline constexpr BoardBits getBoardSet() const{
+		return getBoardOfIndex(getBoardIndex());
+	}
+
+	[[gnu::const]]
+	inline constexpr FieldBits getFieldSet() const{
+		return getFieldOfIndex(getFieldIndex());
+	}
+
+	[[gnu::const]]
+	inline constexpr unsigned getBoardIndex() const{
+		return set >> 4;
+	}
+
+	[[gnu::const]]
+	inline constexpr unsigned getFieldIndex() const{
+		return set & 0xF;
+	}
+
+	[[gnu::const]]
+	inline constexpr bool hasWinOccurred(WonState afterMove) const{
+		return winOccurred;
+	}
+
+	[[gnu::const]]
+	inline constexpr bool hasOnlyBothOccurred(WonState afterMove) const{
+		return onlyBothOccurred;
+	}
+
 
 	//Field bits if a board was conquered by P1
 	FieldBits getWonBoardPOne(WonState afterMove) const;

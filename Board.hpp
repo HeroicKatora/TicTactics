@@ -13,16 +13,29 @@
  */
 struct BoardField{
 
-	BoardField();
-	BoardField(const FieldBits bits);
+	inline constexpr BoardField() :bitsUsed((FieldBits) 0){
+	}
+	inline constexpr BoardField(const FieldBits bits):bitsUsed(bits){
+	}
 
 	FieldBits bitsUsed;
 
-	BoardField operator &(const BoardField& other) const;
-	BoardField operator |(const BoardField& other) const;
-	bool operator==(const BoardField& other) const;
+	[[gnu::const]]
+	inline constexpr BoardField operator &(const BoardField& other) const {
+		return BoardField(bitsUsed&other.bitsUsed);
+	}
 
-	explicit operator FieldBits() const{
+	[[gnu::const]]
+	inline constexpr BoardField operator |(const BoardField& other) const {
+		return BoardField(bitsUsed|other.bitsUsed);
+	}
+
+	[[gnu::const]]
+	inline constexpr bool operator ==(const BoardField& other) const {
+		return bitsUsed == other.bitsUsed;
+	}
+
+	inline explicit constexpr operator FieldBits() const{
 		return (FieldBits) bitsUsed;
 	};
 	/**
@@ -45,29 +58,32 @@ struct TicTacBoard{
 	static const WonState WONP2 = 0x4;
 
 	[[gnu::const]]
-	inline static bool isWon(WonState wonState){
+	inline constexpr static bool isWon(WonState wonState){
 		return wonState > 1;
 	}
 
 	[[gnu::const]]
-	inline static bool hasPlayerOneWon(WonState wonState){
+	inline constexpr static bool hasPlayerOneWon(WonState wonState){
 		return wonState & WONP1;
 	}
 
 	[[gnu::const]]
-	inline static bool hasPlayerTwoWon(WonState wonState){
+	inline constexpr static bool hasPlayerTwoWon(WonState wonState){
 		return wonState & WONP2;
 	}
 
 	[[gnu::const]]
-	inline static bool canOnlyBothWin(WonState wonState){
+	inline constexpr static bool canOnlyBothWin(WonState wonState){
 		return wonState & ONLYBOTH;
 	}
 
 	[[gnu::const]]
-	inline bool isWon() const{
+	inline constexpr bool isWon() const{
 		return wonState > 1;
 	}
+
+	inline constexpr TicTacBoard():wonState(0), setPlayerOne(0),
+			setPlayerTwo(0), rating(0), safe(false){};
 
 	WonState wonState;
 	BoardField setPlayerOne, setPlayerTwo;
@@ -78,27 +94,27 @@ struct TicTacBoard{
 	bool checkPlayerTwoWon() const;
 
 	[[gnu::const]]
-	inline bool hasPlayerOneWon() const {
+	inline constexpr bool hasPlayerOneWon() const {
 		return wonState & WONP1;
 	}
 
 	[[gnu::const]]
-	inline bool hasPlayerTwoWon() const {
+	inline constexpr bool hasPlayerTwoWon() const {
 		return wonState & WONP2;
 	}
 
 	[[gnu::const]]
-	inline bool canOnlyBothWin() const {
+	inline constexpr bool canOnlyBothWin() const {
 		return wonState & ONLYBOTH;
 	}
 
 	[[gnu::const]]
-	inline FieldBits getBlockedFields() const{
+	inline constexpr FieldBits getBlockedFields() const{
 		return (FieldBits)(setPlayerOne|setPlayerTwo);
 	}
 
 	void applyMove(bool playerOne, FieldBits field, bool triState);
-	inline void undoMoveNotWonState(bool playerOne, FieldBits field){
+	inline constexpr void undoMoveNotWonState(bool playerOne, FieldBits field){
 		safe = false;
 		playerOne? setPlayerOne.bitsUsed:setPlayerTwo.bitsUsed -= field;
 	}
@@ -109,7 +125,7 @@ struct TicTacBoard{
  */
 struct TacTicBoard:TicTacBoard{
 	TicTacBoard components[9];
-	TacTicBoard(){
+	inline constexpr TacTicBoard(){
 		for(int i = 0;i<9;i++){
 			components[i] = TicTacBoard();
 		}
