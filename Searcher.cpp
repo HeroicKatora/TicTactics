@@ -402,10 +402,10 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 		current.childIndex = 0;
 		current.marginAlpha = maxRating(searchState.isPlayerOneTurn());
 		current.marginBeta = minRating(searchState.isPlayerOneTurn());
-		printBestPath(startNode, maxDepth, nodesSearched, duration_cast<milliseconds>(steady_clock::now()-timeStart));
+		printBestPath(startNode, maxDepth, nodesSearched, duration_cast<milliseconds>(steady_clock::now()-startTime));
+		printChannel(TTTPConst::channelDebug, "Engine stats: Time for this layer: %u A-B-Cuts: %u", duration_cast<milliseconds>(steady_clock::now()-timeStart), cutsMade);
 		if(current.node->rating == maxRating(true) || current.node->rating == minRating(true)){
 			printInfo("All nodes are final, finished searching");
-			fprintf(stdin, "move");
 			break;
 		}
 	}
