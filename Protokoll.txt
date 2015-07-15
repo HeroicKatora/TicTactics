@@ -51,8 +51,9 @@ behaviour, stderr is not strictly linear
 
 7) Protocol lines may not be longer than 1000 characters
 
-8) Output/Input starting with ":" shall be ignored for game flow, information only, until ":\n" is output
-These can also be seen as data to own clients instead of the other client.
+8) If a line starting with ":" is on output or input, this stream shall be ignored for game flow and be considered information only, 
+until a line ending with ":\n" is on the specific stream. Yes, this ignores the one line consisting solely of ":\n" 
+These lines can also be seen as data to own clients instead of the other client.
 
 9) Asynchronous Data must have an identifier in the form \[<id>\] in front of it. More
 information about identifiers is found in [1.3], all reserved identifiers are listed under 
