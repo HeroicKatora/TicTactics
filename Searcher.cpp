@@ -268,20 +268,17 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 	}
 }
 
-void printBestPath(const SearchNode * node){
+void printBestPath(const SearchNode * node, unsigned depth, signed nodes, std::chrono::milliseconds time){
 	char buffer [1000];
-	int off = sprintf(buffer, "%10s ", "");
-	signed nodeRating = node->rating;
+	int off = sprintf(buffer, "score: %d depth: %u nodes: %u time: %u ", node->rating, depth, nodes, time);
 	node = node->children;
 	for(int i = 0;i<100 && node;i++){
 		off += sprintMove(buffer+off, node->move);
 		off += sprintf(buffer+off, " ");
-		//nodeRating = node->rating;
 		node = node->children;
 	}
-	snprintf(buffer, 1000, "%-10i", nodeRating);
-	buffer[10] = ' ';
-	printChannel(TTTPConst::channelEngine, buffer);
+	//printChannel(TTTPConst::channelEngine, "%s", buffer);
+	printOut("%s", buffer);
 }
 
 void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, const std::chrono::seconds maxDuration){
@@ -405,9 +402,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 		current.childIndex = 0;
 		current.marginAlpha = maxRating(searchState.isPlayerOneTurn());
 		current.marginBeta = minRating(searchState.isPlayerOneTurn());
-		printBestPath(startNode);
-		printInfo("Searched: %u Final %u, Time: %ums, Cuts: %u",
-				nodesSearched, finalNodes, duration_cast<milliseconds>(steady_clock::now()-timeStart), cutsMade);
+		printBestPath(startNode, maxDepth, nodesSearched, duration_cast<milliseconds>(steady_clock::now()-timeStart));
 		if(current.node->rating == maxRating(true) || current.node->rating == minRating(true)){
 			printInfo("All nodes are final, finished searching");
 			fprintf(stdin, "move");
