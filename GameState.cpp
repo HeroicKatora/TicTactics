@@ -221,3 +221,17 @@ void GameState::start() {
 Searcher* GameState::getSearcher() const{
 	return searcher;
 }
+
+Rating GameState::rate() const{
+	if(gameboard.isWon()){
+		if((gameboard.wonState & 0x6) == 0x2) return Ratings::RATING_P1_GAME;
+		if((gameboard.wonState & 0x6) == 0x4) return Ratings::RATING_P2_GAME;
+		return 0;
+	}
+	signed sum = 0;
+	for(int i = 0;i<9;i++){
+		sum += gameboard.components[i].rate();
+	}
+	sum += gameboard.rate() * 5;
+	return sum;
+}

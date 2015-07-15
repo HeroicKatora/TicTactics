@@ -116,4 +116,6 @@ public:
 	 * Returns a pointer to the searcher if there is one
 	 */
 	Searcher* getSearcher() const;
+
+	Rating rate() const;
 };

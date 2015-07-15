@@ -287,16 +287,18 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 		return;
 	const unsigned maximalDepth = maximalSearchDepth == 0? 81 : std::min(maximalSearchDepth, (unsigned)81);
 	using namespace std::chrono;
+	bool autoPrint = false;
 
 	const auto startTime = steady_clock::now();
 	GameState searchState = *gameState;
 	struct SearchPathNode{
 		SearchPathNode(SearchNode *node, Rating marginAlpha, Rating marginBeta):node(node),
-				childIndex(0), marginAlpha(marginAlpha), marginBeta(marginBeta)
+				childIndex(0), allFinal(true), marginAlpha(marginAlpha), marginBeta(marginBeta)
 		{
 		}
 		SearchNode *node;
 		unsigned childIndex;
+		bool allFinal;
 		Rating marginAlpha; //If max possible rating (from turn players perspective) is better than alpha, skip this node
 		Rating marginBeta; //Max possible rating of all nodes that were already viewed, used as new marginAlpha one depth further
 	};
@@ -310,6 +312,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 	const auto out = [&](unsigned retain){
 		if(__builtin_expect(nodePath.size() > 0, true)){
 			Rating newRating = current.node->rating;
+			bool final = current.allFinal;
 			for(unsigned i = retain;i<current.node->childCount;i++){
 				current.node->children[i].close();
 			}
@@ -320,6 +323,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 			current = nodePath.top();
 			nodePath.pop();
 			current.marginBeta = isOneBetterThan(current.marginBeta, newRating, searchState.isPlayerOneTurn())?current.marginBeta:newRating;
+			current.allFinal &= final;
             //printDebug<3>("%d Undone move %s with rating %d Beta %d Alpha %d", depth, s, newRating, current.marginBeta, current.marginAlpha);
 			current.childIndex++;
 			depth--;
@@ -348,11 +352,13 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 		printOut(":Search depth %u:", maxDepth);
 		size_t finalNodes = 0;
 		size_t cutsMade = 0;
+		bool allNodes = false;
 		const auto timeStart = steady_clock::now();
 		while(!end){
 			if(load){
 				load = false;
 				if(out(getWeightedMaxChildNumber(current.node->weight, depth))){
+					allNodes = true;
 					break;
 				}
 			}
@@ -364,13 +370,17 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stossen erhoehen
 				//Expand this node
 				current.node->discover(searchState.gameboard);
-				if(current.node->childCount == 0){
+				if(searchState.isWon() || current.node->childCount == 0){
 					finalNodes++;
+				}
+			}else{
+				if(!searchState.isWon()){
+					current.allFinal = false;
 				}
 			}
 			if(__builtin_expect(current.childIndex == current.node->childCount, false)){
 				if(current.childIndex == 0){ //depth == maxDepth oder keine Childnodes
-					current.node->rating = rate(searchState);
+					current.node->rating = searchState.rate();
 				}else{
 					current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
 				}
@@ -390,7 +400,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 				}
 			}
 
-			if(maxDuration > std::chrono::seconds::zero() && steady_clock::now()-startTime > maxDuration){
+			if(nodesSearched%0x1000 == 0 && maxDuration > std::chrono::seconds::zero() && steady_clock::now()-startTime > maxDuration){
 				printInfo(EngineConstants::computationTimeExceeded);
 				end = true;
 			}
@@ -410,13 +420,20 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 				(size_t) (nodesSearched - nodesSearchedRecent), duration_cast<milliseconds>(nowTime-timeStart), cutsMade);
 
 		nodesSearchedRecent = nodesSearched;
-		if(current.node->rating == maxRating(true) || current.node->rating == minRating(true)){
+		if(allNodes && current.allFinal) //current.node->rating == maxRating(true) || current.node->rating == minRating(true)){
+		{
 			printInfo("All nodes are final, finished searching");
+			autoPrint = true;
 			break;
 		}
 	}
 	while(nodePath.size()){
 		out(getWeightedMaxChildNumber(current.node->weight, depth));
+	}
+	if(autoPrint){
+		char move[5];
+		sprintMove(move, current.node->children[0].move);
+		printOut("move %s", move);
 	}
 }
 
@@ -464,7 +481,7 @@ void SearchNode::setToMaxChild(bool playerOne){
 }
 
 void Searcher::eval(){
-	printOut("Board evaluation: %d", rate(*gameState));
+	printOut("Board evaluation: %d", gameState->rate());
 }
 
 Searcher::~Searcher(){

@@ -5,6 +5,8 @@
  *      Author: Andreas Molzer
  */
 #include "Board.hpp"
+#include "RatingTable.h"
+#include "Rating.hpp"
 
 const BoardField Fields::winBoards [] =
 		{BoardField(07), BoardField(070), BoardField(0700), 	//waagrecht
@@ -39,6 +41,16 @@ bool TicTacBoard::checkPlayerTwoWon() const{
 		return isWinBoard(setPlayerOne)?false:true;
 	else
 		return isWinBoard(setPlayerTwo);
+}
+
+Rating TicTacBoard::rate() const{
+	if(isWon()){
+		if((wonState & 0x6) == 0x2) return Ratings::RATING_P1_WON;
+		if((wonState & 0x6) == 0x4) return Ratings::RATING_P2_WON;
+		return 0;
+	}
+	unsigned index = ((FieldBits) setPlayerOne << 9) | (FieldBits) setPlayerTwo;
+	return ratingTable[index];
 }
 
 void TicTacBoard::applyMove(bool playerOne, FieldBits field, bool triState) {

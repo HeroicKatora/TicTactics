@@ -39,6 +39,7 @@ struct BoardField{
 	inline explicit constexpr operator FieldBits() const{
 		return (FieldBits) bitsUsed;
 	};
+
 	/**
 	 * Gets if the cell with the index is ticked.
 	 * Probably don't use this often if you want to tune for performance
@@ -93,6 +94,8 @@ struct TicTacBoard{
 
 	bool checkPlayerOneWon() const;
 	bool checkPlayerTwoWon() const;
+
+	Rating rate() const;
 
 	[[gnu::const]]
 	inline constexpr bool hasPlayerOneWon() const {
