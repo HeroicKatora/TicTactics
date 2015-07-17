@@ -18,32 +18,32 @@ typedef signed Rating;
 static const FieldBits MID_FIELD = 0x10;
 
 [[gnu::const]]
-inline constexpr FieldBits getFieldOfBoard(const BoardBits boardID){
+inline constexpr FieldBits getFieldOfBoard(const BoardBits& boardID){
 	return 0x1 << boardID;
 }
 
 [[gnu::const]]
-inline constexpr BoardBits getBoardOfField(const FieldBits bits){
+inline constexpr BoardBits getBoardOfField(const FieldBits& bits){
 	return __builtin_ffs(bits)-1;
 }
 
 [[gnu::const]]
-inline constexpr unsigned getIndexOfField(const FieldBits bits){
+inline constexpr unsigned getIndexOfField(const FieldBits& bits){
 	return (unsigned) getBoardOfField(bits);
 }
 
 [[gnu::const]]
-inline constexpr unsigned getIndexOfBoard(const BoardBits bits){
+inline constexpr unsigned getIndexOfBoard(const BoardBits& bits){
 	return (unsigned) bits;
 }
 
 [[gnu::const]]
-inline constexpr FieldBits getFieldOfIndex(const unsigned index){
+inline constexpr FieldBits getFieldOfIndex(const unsigned& index){
 	return 0x1 << index;
 }
 
 [[gnu::const]]
-inline constexpr BoardBits getBoardOfIndex(const unsigned index){
+inline constexpr BoardBits getBoardOfIndex(const unsigned& index){
 	return (BoardBits) index;
 }
 

@@ -271,7 +271,7 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 
 void printBestPath(const SearchNode * node, unsigned depth, long long signed nodes, std::chrono::milliseconds time){
 	char buffer [1000];
-	int off = sprintf(buffer, "score: %d depth: %u nodes: %-15llu time: %-10u ", node->rating, depth, nodes, time);
+	int off = sprintf(buffer, "score: %d depth: %u nodes: %llu time: %llu ", node->rating, depth, nodes, time.count());
 	node = node->children;
 	for(int i = 0;i<100 && node;i++){
 		off += sprintMove(buffer+off, node->move);
@@ -285,12 +285,18 @@ void printBestPath(const SearchNode * node, unsigned depth, long long signed nod
 void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, const std::chrono::seconds maxDuration){
 	if(!startNode)
 		return;
-	const unsigned maximalDepth = maximalSearchDepth == 0? 81 : std::min(maximalSearchDepth, (unsigned)81);
 	using namespace std::chrono;
 	bool autoPrint = false;
 
 	const auto startTime = steady_clock::now();
 	GameState searchState = *gameState;
+	unsigned unsetCounter = 1;
+	for(unsigned i = 0;i<9;i++){
+		unsetCounter += 9-__builtin_popcount(gameState->gameboard.components[i].getBlockedFields());
+	}
+	const unsigned maximalDepth = maximalSearchDepth == 0 ? unsetCounter : std::min(maximalSearchDepth, unsetCounter);
+
+
 	struct SearchPathNode{
 		SearchPathNode(SearchNode *node, Rating marginAlpha, Rating marginBeta):node(node),
 				childIndex(0), allFinal(true), marginAlpha(marginAlpha), marginBeta(marginBeta)
@@ -300,12 +306,25 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 		unsigned childIndex;
 		bool allFinal;
 		Rating marginAlpha; //If max possible rating (from turn players perspective) is better than alpha, skip this node
-		Rating marginBeta; //Max possible rating of all nodes that were already viewed, used as new marginAlpha one depth further
+		Rating marginBeta; //Max possible rating of all nodes that were already viewed, used as new marginAlpha one depth further#
+		inline void reset(Rating scoreCap, Rating initWorstScore){
+			childIndex = 0;
+			allFinal = true;
+			marginAlpha = scoreCap;
+			marginBeta = initWorstScore;
+		}
 	};
+	enum StopType{
+		NATURAL_ALL_NODES = 0,
+		TIME_EXCEEDED,
+		DEPTH_EXCEEDED,
+		STOPPED_BY_INPUT
+	};
+
 
 	unsigned maxDepth = 1, depth = 0;
 	std::vector<SearchPathNode> vector;
-	vector.reserve(50);
+	vector.reserve(81);
 	std::stack<SearchPathNode, std::vector<SearchPathNode>> nodePath{vector};
 
 	SearchPathNode current{startNode, maxRating(searchState.isPlayerOneTurn()), minRating(searchState.isPlayerOneTurn())};
@@ -317,14 +336,11 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 				current.node->children[i].close();
 			}
 			searchState.undoMove(current.node->move);
-			//char s[4];
-            //sprintMove(s, current.node->move);
 
 			current = nodePath.top();
 			nodePath.pop();
 			current.marginBeta = isOneBetterThan(current.marginBeta, newRating, searchState.isPlayerOneTurn())?current.marginBeta:newRating;
 			current.allFinal &= final;
-            //printDebug<3>("%d Undone move %s with rating %d Beta %d Alpha %d", depth, s, newRating, current.marginBeta, current.marginAlpha);
 			current.childIndex++;
 			depth--;
 			return false;
@@ -337,35 +353,29 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 		nodePath.push(current);
 		current = newNode;
 		searchState.applyAndChangeMove(current.node->move);
-		//char s[4];
-        //sprintMove(s, current.node->move);
 		depth++;
-        //printDebug<3>("%d Done move %s Beta %d Alpha %d", depth, s, current.marginBeta, current.marginAlpha);
 	};
 
-	printInfo("Started searching");
+	printChannel(TTTPConst::channelDebug, " Started searching");
 	long long signed nodesSearched = 0;
 	long long signed nodesSearchedRecent = 0;
+	StopType stopType = DEPTH_EXCEEDED;
 	bool load = false;
 	for(;!end && (maximalDepth == 0 || maxDepth < maximalDepth);maxDepth++){
 		depth = 0;
-		printOut(":Search depth %u:", maxDepth);
+		printChannel(TTTPConst::channelDebug, " Search depth %u", maxDepth);
 		size_t finalNodes = 0;
 		size_t cutsMade = 0;
-		bool allNodes = false;
 		const auto timeStart = steady_clock::now();
 		while(!end){
 			if(load){
 				load = false;
 				if(out(getWeightedMaxChildNumber(current.node->weight, depth))){
-					allNodes = true;
+					stopType = NATURAL_ALL_NODES;
 					break;
 				}
 			}
 
-			//char s[4];
-			//sprintMove(s, current.node->move);
-			//printOut("Move: %s Beta: %d  Alpha %d  Depth %u",s , current.marginBeta, current.marginAlpha, depth);
 			//Search code
 			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stossen erhoehen
 				//Expand this node
@@ -374,9 +384,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 					finalNodes++;
 				}
 			}else{
-				if(!searchState.isWon()){
-					current.allFinal = false;
-				}
+				current.allFinal = searchState.isWon();
 			}
 			if(__builtin_expect(current.childIndex == current.node->childCount, false)){
 				if(current.childIndex == 0){ //depth == maxDepth oder keine Childnodes
@@ -389,8 +397,6 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 				if(__builtin_expect(compare(current.marginBeta, current.marginAlpha, searchState.isPlayerOneTurn(), std::greater_equal<Rating>()), false)){
 					current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
 					cutsMade++;
-					//sprintMove(s, current.node->children[0].move);
-					//printDebug<3>("Cut made because of %s", s);
 					load = true;
 				}else{
 					SearchPathNode next = {&current.node->children[current.childIndex],
@@ -402,6 +408,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 
 			if(nodesSearched%0x1000 == 0 && maxDuration > std::chrono::seconds::zero() && steady_clock::now()-startTime > maxDuration){
 				printInfo(EngineConstants::computationTimeExceeded);
+				stopType = TIME_EXCEEDED;
 				end = true;
 			}
 
@@ -411,21 +418,21 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 				pauseMutex.unlock();
 			}
 		}
-		current.childIndex = 0;
-		current.marginAlpha = maxRating(searchState.isPlayerOneTurn());
-		current.marginBeta = minRating(searchState.isPlayerOneTurn());
 		auto nowTime = steady_clock::now();
 		printBestPath(startNode, maxDepth, nodesSearched, duration_cast<milliseconds>(nowTime-startTime));
-		printChannel(TTTPConst::channelDebug, "Nodes layer: %-10u Time layer: %-8u Cuts layer: %-10u",
+		printChannel(TTTPConst::channelEngine, "Nodes layer: %u Time layer: %u Cuts layer: %u",
 				(size_t) (nodesSearched - nodesSearchedRecent), duration_cast<milliseconds>(nowTime-timeStart), cutsMade);
 
 		nodesSearchedRecent = nodesSearched;
-		if(allNodes && current.allFinal) //current.node->rating == maxRating(true) || current.node->rating == minRating(true)){
+		if(stopType == NATURAL_ALL_NODES && current.allFinal) //current.node->rating == maxRating(true) || current.node->rating == minRating(true)){
 		{
-			printInfo("All nodes are final, finished searching");
+			printChannel(TTTPConst::channelDebug, " All nodes are final, finished searching");
 			autoPrint = true;
 			break;
+		}else{
+			printChannel(TTTPConst::channelDebug, " Natural stop: %u All final: %u", stopType == NATURAL_ALL_NODES, current.allFinal);
 		}
+		current.reset(maxRating(searchState.isPlayerOneTurn()), minRating(searchState.isPlayerOneTurn()));
 	}
 	while(nodePath.size()){
 		out(getWeightedMaxChildNumber(current.node->weight, depth));
@@ -435,6 +442,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 		sprintMove(move, current.node->children[0].move);
 		printOut("move %s", move);
 	}
+	printChannel(TTTPConst::channelDebug, " Searcher thread terminated");
 }
 
 void SearchNode::discover(const TacTicBoard& state){
