@@ -14,6 +14,7 @@ typedef unsigned short FieldBits;
 typedef unsigned short BoardBits;
 
 typedef signed Rating;
+typedef float Weigth;
 
 static const FieldBits MID_FIELD = 0x10;
 

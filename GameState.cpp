@@ -32,6 +32,7 @@ void GameState::applyAndChangeMove(Move& m) {
 
 	}
 	playerOneTurn = !playerOneTurn;
+	movesPlayed++;
 }
 
 void GameState::_applyMove(Move&& m){
@@ -41,6 +42,7 @@ void GameState::_applyMove(Move&& m){
 [[gnu::hot]]
 void GameState::undoMove(Move& m) {
 	TicTacBoard *ticTacBoard = gameboard.components+m.getBoardSet();
+	movesPlayed--;
 	playerOneTurn = !playerOneTurn;
 	gameboard.setPlayerOne.bitsUsed -= m.getWonBoardPOne(ticTacBoard->wonState);
 	gameboard.setPlayerTwo.bitsUsed -= m.getWonBoardPTwo(ticTacBoard->wonState);
@@ -105,6 +107,11 @@ bool GameState::isValidMove(Move& m) const {
 [[gnu::const]]
 bool GameState::isWon() const{
 	return gameboard.isWon(gameboard.wonState);
+}
+
+[[gnu::const]]
+bool GameState::isEnd() const{
+	return isWon() || movesPlayed == 81;
 }
 
 [[gnu::const]]

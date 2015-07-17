@@ -18,6 +18,8 @@
 #include <functional>
 #include <future>
 
+constexpr Weigth WEIGHT_CAP = 1;
+
 /**
  * Calculates the number n of childs allowed for a node of given weight and depth.
  * The top n children (best for the player whos turn it is) keep their own children, the others don't.
@@ -49,15 +51,15 @@
  * And n = node.weigth * log d
  */
 [[gnu::const]]
-inline constexpr float functionN(unsigned depth){
-	return (float) 10e7;
+inline constexpr Weigth functionN(unsigned depth){
+	return (Weigth) 10e7;
 }
 
 [[gnu::pure]]
-unsigned getWeightedMaxChildNumber(float weight, unsigned depth){
+unsigned getWeightedMaxChildNumber(Weigth weight, unsigned depth){
 	//We use caching since that is O(c), while the function n might not be
-	static std::vector<float> calculationResults {};
-	std::function<float (unsigned int)> functionN_ = functionN;
+	static std::vector<Weigth> calculationResults {};
+	std::function<Weigth (unsigned int)> functionN_ = functionN;
 	unsigned size = calculationResults.size();
 	while(size <= depth){
 		calculationResults.push_back(functionN_(size++));
@@ -69,7 +71,7 @@ Searcher::Searcher(const GameState * state):gameState(state), pause(true),
 		pauseMutex(), end(false), topNode(){
 	if(state->searcher) throw std::exception();
 	state->searcher = this;
-	topNode.weight = 16;
+	topNode.weight = WEIGHT_CAP;
 }
 
 MoveSuggestion Searcher::getBestKnownMove() const{
@@ -90,7 +92,7 @@ void Searcher::notifyUndo(Move& move) {
 	topNode.close();
 	topNode.move = move;
 	topNode.rating = 0;
-	topNode.weight = 1;
+	topNode.weight = WEIGHT_CAP;
 }
 
 void Searcher::notifyMoveMade(Move& move) {
@@ -115,7 +117,7 @@ void Searcher::notifyMoveMade(Move& move) {
 		topNode.close();
 		topNode.rating = 0;
 	}
-	topNode.weight = 1;
+	topNode.weight = WEIGHT_CAP;
 	setPause(pauseAfter);
 }
 
@@ -324,7 +326,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 
 	unsigned maxDepth = 1, depth = 0;
 	std::vector<SearchPathNode> vector;
-	vector.reserve(81);
+	vector.reserve(unsetCounter);
 	std::stack<SearchPathNode, std::vector<SearchPathNode>> nodePath{vector};
 
 	SearchPathNode current{startNode, maxRating(searchState.isPlayerOneTurn()), minRating(searchState.isPlayerOneTurn())};
@@ -361,6 +363,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 	long long signed nodesSearchedRecent = 0;
 	StopType stopType = DEPTH_EXCEEDED;
 	bool load = false;
+
 	for(;!end && (maximalDepth == 0 || maxDepth < maximalDepth);maxDepth++){
 		depth = 0;
 		printChannel(TTTPConst::channelDebug, " Search depth %u", maxDepth);
@@ -384,7 +387,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 					finalNodes++;
 				}
 			}else{
-				current.allFinal = searchState.isWon();
+				current.allFinal = searchState.isEnd();
 			}
 			if(__builtin_expect(current.childIndex == current.node->childCount, false)){
 				if(current.childIndex == 0){ //depth == maxDepth oder keine Childnodes
@@ -473,7 +476,7 @@ void SearchNode::revalueChildren(bool playerOne, unsigned maxChilds){
 	if(!children) return;
 	maxChilds = std::min(maxChilds, childCount);
 	std::stable_sort(children, children+maxChilds, std::bind(isOneBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
-	float chweight = weight;
+	Weigth chweight = weight;
 	for(unsigned i = 0;i<maxChilds;i++){
 		chweight /= 2;
 		children[i].weight = chweight;

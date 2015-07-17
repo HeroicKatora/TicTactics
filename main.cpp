@@ -98,7 +98,7 @@ void settingsPhase(){
 }
 
 void gameLoop(){
-	while(!state.isWon()){
+	while(!state.isEnd()){
 		goToNextLine();
 		if(matches(line, reg::move)){
 			playMove();
@@ -122,7 +122,12 @@ void gameLoop(){
 			winGame(!state.isPlayerOneTurn());
 		}
 	}
-	winGame(state.hasWon(true));
+	if(state.isWon()){
+		winGame(state.hasWon(true));
+	}else{
+		printOut("The game ended in a tie");
+		endGame();
+	}
 }
 
 void nextInitMove(MoveDescriptor *array, int& existing, bool playerOne){

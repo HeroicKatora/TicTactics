@@ -32,19 +32,23 @@ struct InitResult{
 class GameState{
 	friend Searcher;
 	friend signed rate(const GameState&);
+
+
 	TacTicBoard gameboard;
 	MoveHistory history;
 	mutable Searcher * searcher;
 	bool playerOneTurn;
 	bool inSetup;
+	unsigned movesPlayed;
 
 	/**
 	 * Applies a move to the board and sets its fields according to the current board state.
 	 */
 	void applyAndChangeMove(Move& m);
-	void _applyMove(Move&& m); //Convenience, should use this only in init
+	void _applyMove(Move&& m); //Used in init, atm does nothing but call applyAndChangeMove
+
 	/**
-	 * Undo the given move (asserts it is correct)
+	 * Undo the given move (does not check for its correctness)
 	 */
 	void undoMove(Move& m);
 
@@ -57,7 +61,7 @@ public:
 	/**
 	 * Constructs a game that is in setup phase
 	 */
-	GameState():gameboard(), history(), searcher(0), playerOneTurn(true), inSetup(true){}
+	GameState():gameboard(), history(), searcher(0), playerOneTurn(true), inSetup(true), movesPlayed(0){}
 	GameState(GameState&) = default;
 	GameState(const GameState&) = default;
 	/**
@@ -85,6 +89,11 @@ public:
 	 * True if a player has won the game
 	 */
 	bool isWon() const;
+
+	/**
+	 * Returns if this game ended, either in a win or a draw
+	 */
+	bool isEnd() const;
 
 	/**
 	 * Checks if a specific player has won the game

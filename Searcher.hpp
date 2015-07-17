@@ -29,7 +29,7 @@ struct SearchNode{ //If rating = +-MAX, win of one player,
 	//if no child nodes and rating != MAX, obviously no children are existent
 	Rating rating;
 	//Weight of this note, depends on depth and rating relative to others
-	float weight;
+	Weigth weight;
 
 	unsigned childCount;
 	Move move;
