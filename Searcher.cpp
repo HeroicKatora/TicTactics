@@ -58,13 +58,7 @@ inline constexpr Weigth functionN(unsigned depth){
 [[gnu::pure]]
 unsigned getWeightedMaxChildNumber(Weigth weight, unsigned depth){
 	//We use caching since that is O(c), while the function n might not be
-	static std::vector<Weigth> calculationResults {};
-	std::function<Weigth (unsigned int)> functionN_ = functionN;
-	unsigned size = calculationResults.size();
-	while(size <= depth){
-		calculationResults.push_back(functionN_(size++));
-	}
-	return weight * calculationResults[depth];
+	return weight * functionN(depth);
 }
 
 Searcher::Searcher(const GameState * state):gameState(state), pause(true),
