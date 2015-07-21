@@ -274,7 +274,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 	if(!startNode)
 		return;
 	using namespace std::chrono;
-	bool autoPrint = false;
+	bool autoPrint = true;
 
 	const auto startTime = steady_clock::now();
 	GameState searchState = *gameState;
@@ -354,6 +354,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 	bool load = false;
 
 	for(;!end && maxDepth < maximalDepth;maxDepth++){
+		autoPrint = false;
 		depth = 0;
 		printChannel(TTTPConst::channelDebug, " Search depth %u", maxDepth);
 		size_t finalNodes = 0;
