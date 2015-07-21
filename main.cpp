@@ -110,7 +110,6 @@ void gameLoop(){
 		}else if(matches(line, "Move")){
 			Move best{searcher.getBestKnownMove().move};
 			searcher.endParallel();
-			state.playMove(best);
 			char mv [20] = {};
 			sprintMove(mv, best);
 			printOut("move %s", mv);
