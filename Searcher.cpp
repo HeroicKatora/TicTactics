@@ -199,10 +199,6 @@ Movecount countPlayMoves(const TacTicBoard& state, const Move& oldMove){
 }
 
 size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& oldMove) {
-	if(state.isWon()){
-		dest = NULL;
-		return 0;
-	}
 	size_t nodeIndex = 0;
 	if(oldMove.isInvalidDefault()){
 		//This means we are on the first more after init
@@ -223,10 +219,6 @@ size_t discoverMoves(const TacTicBoard& state, SearchNode *&dest, const Move& ol
 	}else{
 		Movecount mCount = countPlayMoves(state, oldMove);
 		signed count = mCount.moves;
-		if(count == 0){
-			dest = NULL;
-			return 0;
-		}
 		dest = new SearchNode[count];
 		size_t intoIndex = oldMove.getFieldIndex();
 		FieldBits backField = getFieldOfIndex(oldMove.getBoardIndex());
@@ -324,6 +316,9 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 	std::stack<SearchPathNode, std::vector<SearchPathNode>> nodePath{vector};
 
 	SearchPathNode current{startNode, maxRating(searchState.isPlayerOneTurn()), minRating(searchState.isPlayerOneTurn())};
+	for(SearchNode * p = current.node;p;p = p->children){
+		maxDepth++;
+	}
 	const auto out = [&](unsigned retain){
 		if(__builtin_expect(nodePath.size() > 0, true)){
 			Rating newRating = current.node->rating;
@@ -358,7 +353,7 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 	StopType stopType = DEPTH_EXCEEDED;
 	bool load = false;
 
-	for(;!end && (maximalDepth == 0 || maxDepth < maximalDepth);maxDepth++){
+	for(;!end && maxDepth < maximalDepth;maxDepth++){
 		depth = 0;
 		printChannel(TTTPConst::channelDebug, " Search depth %u", maxDepth);
 		size_t finalNodes = 0;
@@ -373,31 +368,34 @@ void Searcher::startSearch(SearchNode * startNode, unsigned maximalSearchDepth, 
 				}
 			}
 
+			const bool isEnd = searchState.isEnd();
+			const bool p1Turn = searchState.isPlayerOneTurn();
 			//Search code
 			if(depth < maxDepth){ // Besser: Funktion(rating, depth) gegen eine Schranke vergleichen, Schranke nach Stossen erhoehen
 				//Expand this node
-				current.node->discover(searchState.gameboard);
-				if(searchState.isWon() || current.node->childCount == 0){
+				if(!isEnd){
+					current.node->discover(searchState.gameboard);
+				}else {
 					finalNodes++;
 				}
 			}else{
-				current.allFinal = searchState.isEnd();
+				current.allFinal = isEnd;
 			}
 			if(__builtin_expect(current.childIndex == current.node->childCount, false)){
 				if(current.childIndex == 0){ //depth == maxDepth oder keine Childnodes
 					current.node->rating = searchState.rate();
 				}else{
-					current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
+					current.node->revalueChildren(p1Turn, current.childIndex);
 				}
 				load = true;
 			}else{
-				if(__builtin_expect(compare(current.marginBeta, current.marginAlpha, searchState.isPlayerOneTurn(), std::greater_equal<Rating>()), false)){
-					current.node->revalueChildren(searchState.isPlayerOneTurn(), current.childIndex);
+				if(__builtin_expect(compare(current.marginBeta, current.marginAlpha, p1Turn, std::greater_equal<Rating>()), false)){
+					current.node->revalueChildren(p1Turn, current.childIndex);
 					cutsMade++;
 					load = true;
 				}else{
 					SearchPathNode next = {&current.node->children[current.childIndex],
-							current.marginBeta, maxRating(searchState.isPlayerOneTurn())};
+							current.marginBeta, maxRating(p1Turn)};
 					nodesSearched++;
 					in(next);
 				}
@@ -472,7 +470,7 @@ void SearchNode::revalueChildren(bool playerOne, unsigned maxChilds){
 	std::stable_sort(children, children+maxChilds, std::bind(isOneBetterThanNode, std::placeholders::_1, std::placeholders::_2, playerOne));
 	Weigth chweight = weight;
 	for(unsigned i = 0;i<maxChilds;i++){
-		chweight /= 2;
+		chweight *= 0.5;
 		children[i].weight = chweight;
 	}
 	rating = children[0].rating;
