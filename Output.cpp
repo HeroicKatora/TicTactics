@@ -22,6 +22,7 @@ std::mutex errMut{};
 void printOut(const char *format, va_list& arguments){
 	outMut.lock();
 	vfprintf(stdout, format, arguments);
+	fflush(stdout);
 	outMut.unlock();
 }
 
